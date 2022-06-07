@@ -1,0 +1,20 @@
+<style>
+.a_dir {
+  color: #d60000;
+}
+.a_file {
+  color: #696969;
+}
+</style>
+
+<% for (let img of rawimglist) { %>
+<%= img %><br>
+<% if (img.endsWith(".mp4")) { %>
+<video loop src='/<%= img %>' autoplay muted></video>
+<% } else { %>
+  <img src='/<%= img %>' loading="lazy">
+<% } %>
+  <br>
+<% } %>
+
+<%- content %>
