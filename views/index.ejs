@@ -12,7 +12,7 @@
 <% if (img.endsWith(".mp4")) { %>
 <video loop src='/<%= img %>' autoplay muted></video>
 <% } else { %>
-  <img src='/<%= img %>' loading="lazy">
+<a href='/live/<%= img %>'><img src='/<%= img %>' loading="lazy"></a>
 <% } %>
   <br>
 <% } %>

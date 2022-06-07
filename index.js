@@ -35,7 +35,7 @@ function getLRScript() {
 </script>`;
 }
 
-app.use('/p/', (req, res) => {
+app.use('/live/', (req, res) => {
   console.log(req.path);
   out = "";
   out += `<img src='${req.path}'>`
@@ -47,12 +47,12 @@ function printFileList(lst) {
   let out = "";
   for (const i of lst) {
     let cls = i[i.length-1] == '/' ? "a_dir" : "a_file";
-    out += `<a class='${cls}' href='/${i.replace(root, "")}'>${i.replace(root, "")}</a><br>`;
+    out += `<a class='${cls}' href='/browse/${i.replace(root, "")}'>${i.replace(root, "")}</a><br>`;
   }
   return out;
 }
 
-app.use('/', async(req, res) => {
+app.use('/browse', async(req, res) => {
   const fl = req.query.fl;
   const path = req.path;
   console.log("path", path);
