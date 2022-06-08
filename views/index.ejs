@@ -1,20 +1,75 @@
+<html lang="en">
+<head>
 <style>
+
+td {
+  vertical-align: top;
+}
+#maintable {
+  table-layout: fixed;
+  width: 100%;
+}
+.td_left {
+  width: 25%;
+}
+.td_right {
+}
 .a_dir {
   color: #d60000;
 }
 .a_file {
   color: #696969;
 }
+.divfix {
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+img, video {
+  width: 200px;
+  max-width: 200px;
+  max-height: 200px;
+}
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+.flex-container > div {
+  background-color: #f1f1f1;
+  margin: 5px;
+  padding: 5px;
+  width: 200px;
+  text-align: center;
+  font-size: 12px;
+  word-break: break-all;
+}
 </style>
-
-<% for (let img of rawimglist) { %>
-<%= img %><br>
-<% if (img.endsWith(".mp4")) { %>
-<video loop src='/<%= img %>' autoplay muted></video>
-<% } else { %>
-<a href='/live/<%= img %>'><img src='/<%= img %>' loading="lazy"></a>
-<% } %>
-  <br>
-<% } %>
-
+</head>
+<body>
+  <table id="maintable">
+    <tr>
+      <td class="td_left">
+        <div class="divfix">
 <%- content %>
+        </div>
+      </td>
+      <td class="td_right">
+
+<div class="flex-container">
+<% for (let img of rawimglist) { %>
+  <div>
+    <a href='/live/<%= img %>'>
+    <% if (img.endsWith(".mp4")) { %>
+    <video loop src='/<%= img %>' autoplay muted></video>
+    <% } else { %>
+    <img src='/<%= img %>' loading="lazy">
+    <% } %>
+    <br>
+    <%= img %></a>
+  </div>
+<% } %>
+</div>
+</td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -38,7 +38,10 @@ function getLRScript() {
 app.use('/live/', (req, res) => {
   console.log(req.path);
   out = "";
-  out += `<img src='${req.path}'>`
+  if (path.extname(req.path) == ".mp4")
+    out += `<video loop src='${req.path}' autoplay muted></video>`;
+  else
+    out += `<img src='${req.path}'>`;
   out += getLRScript(); 
   res.send(out);
 });
@@ -46,8 +49,13 @@ app.use('/live/', (req, res) => {
 function printFileList(lst) {
   let out = "";
   for (const i of lst) {
-    let cls = i[i.length-1] == '/' ? "a_dir" : "a_file";
-    out += `<a class='${cls}' href='/browse/${i.replace(root, "")}'>${i.replace(root, "")}</a><br>`;
+    let cls = "a_file";
+    let pre = "";
+    if (i[i.length-1] == '/') {
+      cls = "a_dir";
+      pre = "/browse"; 
+    }
+    out += `<a class='${cls}' href='${pre}/${i.replace(root, "")}'>${i.replace(root, "")}</a><br>`;
   }
   return out;
 }
@@ -62,7 +70,7 @@ app.use('/browse', async(req, res) => {
 
   const filelist = printFileList(s);
 
-  let rawimglist = await globp(`${root}${path}*.png`);
+  let rawimglist = await globp(`${root}${path}*.{png,jpg,mp4}`);
   rawimglist = rawimglist.map(x => x.replace(root, ""));
   //res.send("yes");
   res.render('index', {content: filelist, rawimglist});
