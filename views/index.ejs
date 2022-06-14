@@ -1,28 +1,23 @@
-<html lang="en">
+<html>
 <head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="/static/jquery.slider.js"></script>
 <style>
 
-td {
-  vertical-align: top;
-}
-#maintable {
-  table-layout: fixed;
-  width: 100%;
-}
-.td_left {
-  width: 25%;
-}
-.td_right {
-}
 .a_dir {
   color: #d60000;
 }
 .a_file {
   color: #696969;
 }
+.a_img {
+  color: #007747;
+}
+.a_video {
+  color: #08089a;
+}
 .divfix {
   word-break: break-all;
-  white-space: pre-wrap;
 }
 img, video {
   width: 200px;
@@ -38,38 +33,100 @@ img, video {
   margin: 5px;
   padding: 5px;
   width: 200px;
-  text-align: center;
-  font-size: 12px;
+  height: 220px;
   word-break: break-all;
+}
+
+#panelContainer {
+  display: flex;
+  flex-direction: row;
+  color: #fff;
+  flex: 1;
+}
+.panel {
+  position: relative;
+  width: 50%;
+}
+.one {
+  width: 25%;
+}
+
+.slider {
+  z-index: 999999;
+  display: block;
+  position: absolute;
+  width: 5px;
+  background-color: #BBBBBB;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  overflow: visible;
+  user-select: none;
+  cursor: col-resize;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.filelink{
+  font-size: 12px;
+}
+
+.filename {
+  text-align: center;
+}
+
+.preview {
+  height: 200px;
+  vertical-align: middle;
+
+}
+.urlpath {
+  color: black;
+  font-weight: bold;
+  font-size: 20px;
 }
 </style>
 </head>
 <body>
-  <table id="maintable">
-    <tr>
-      <td class="td_left">
-        <div class="divfix">
-<%- content %>
-        </div>
-      </td>
-      <td class="td_right">
+
+  <div class="wrapper">
+		<div id="panelContainer">
+			<div class="panel one">
+				<div class="content divfix">
+        <%- content %>
+				</div>
+			</div>
+			<div class="panel two">
+				<div class="content">
 
 <div class="flex-container">
 <% for (let img of rawimglist) { %>
   <div>
-    <a href='/live/<%= img %>'>
-    <% if (img.endsWith(".mp4")) { %>
-    <video loop src='/<%= img %>' autoplay muted></video>
+    
+    <table><tr><td class="preview">
+    <a href='/live/<%= img.fullpath %>' class='apreview'>
+    <% if (img.basename.endsWith(".mp4")) { %>
+    <video loop src='/<%= img.fullpath %>' autoplay muted></video>
     <% } else { %>
-    <img src='/<%= img %>' loading="lazy">
+    <img src='/<%= img.fullpath %>' loading="lazy">
     <% } %>
-    <br>
-    <%= img %></a>
+    </a>
+    </td></tr><tr><td class="filename">
+        <a href='/live/<%= img.fullpath %>' class='filelink'><%= img.basename %></a>
+      </td></tr></table>
+    
   </div>
 <% } %>
 </div>
-</td>
-    </tr>
-  </table>
+				</div>
+				<span class="slider"></span>
+			</div>
+		</div>
+		<footer>Footer</footer>
+	</div>
+
 </body>
 </html>

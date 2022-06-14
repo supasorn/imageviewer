@@ -4,7 +4,7 @@ const path = require('path');
 const express = require('express');
 const process = require('process');
 const globp = require('glob-promise')
-const fs = require('fs').promises;
+const fs = require('fs');
 
 let root='/home/supasorn/neodpm/';
 if (process.argv.length == 3) {
@@ -27,6 +27,7 @@ const app = express();
 app.use(connectLivereload());
 app.set('view engine', 'ejs');
 app.use(express.static(root));
+app.use('/static', express.static(path.join(__dirname, 'public')))
 
 function getLRScript() {
   return `<script>
@@ -34,6 +35,7 @@ function getLRScript() {
   ':35729/livereload.js?snipver=1"></' + 'script>')
 </script>`;
 }
+
 
 app.use('/live/', (req, res) => {
   console.log(req.path);
@@ -46,36 +48,58 @@ app.use('/live/', (req, res) => {
   res.send(out);
 });
 
-function printFileList(lst) {
-  let out = "";
+function printFileList(urlpath, lst) {
+  let out = `<span class="urlpath">${urlpath}</span><br>`;
+  out += "<a class='a_dir' href='../'>Up One Level..</a><br>";
   for (const i of lst) {
     let cls = "a_file";
     let pre = "";
     if (i[i.length-1] == '/') {
       cls = "a_dir";
       pre = "/browse"; 
+    } else if (path.extname(i) == ".mp4") {
+      cls = "a_video";
+    } else if (path.extname(i) == ".jpg" || path.extname(i) == ".png") {
+      cls = "a_img";
     }
-    out += `<a class='${cls}' href='${pre}/${i.replace(root, "")}'>${i.replace(root, "")}</a><br>`;
+    out += `<a class='${cls}' href='${pre}/${i.replace(root, "")}'>${path.basename(i)}</a><br>`;
   }
   return out;
 }
 
+function sortByModifiedTime(files) {
+  return files.map(function (fileName) {
+    return {
+      name: fileName,
+      time: fs.statSync(fileName).mtime.getTime()
+    };
+  })
+  .sort(function (a, b) {
+    return b.time - a.time; })
+  .map(function (v) {
+    return v.name; });
+}
+
 app.use('/browse', async(req, res) => {
   const fl = req.query.fl;
-  const path = req.path;
-  console.log("path", path);
-  const sdir = await globp(`${root}/${path}/*/`);
-  const sfile = await globp(`${root}/${path}/*`, {nodir: true});
-  const s = sdir.concat(sfile);
+  const urlpath = req.path;
+  console.log("path", urlpath);
+  const sdir = await globp(`${root}/${urlpath}/*/`);
 
-  const filelist = printFileList(s);
+  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,mp4}`, {nodir: true});
+  smedia = sortByModifiedTime(smedia);
 
-  let rawimglist = await globp(`${root}${path}*.{png,jpg,mp4}`);
-  rawimglist = rawimglist.map(x => x.replace(root, ""));
-  //res.send("yes");
+  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.mp4)`, {nodir: true});
+  const s = sdir.concat(smedia, sfile);
+  const filelist = printFileList(urlpath, s);
+
+  rawimglist = smedia.map(x => ({fullpath: x.replace(root, ""), basename: path.basename(x)}));
+  //rawimglist = smedia.map(x => path.basename(x));
   res.render('index', {content: filelist, rawimglist});
 });
 
+
+app.use('/', (req, res) => { res.redirect('/browse'); });
 
 app.listen(1234)
 
