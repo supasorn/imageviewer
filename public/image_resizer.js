@@ -3,7 +3,7 @@ window.onresize = window.onload = function() {
 }
 
 function resize() {
-  var img    = document.getElementsByTagName('img')[0];
+  var img = document.getElementsByTagName('img')[0];
   winDim = getWinDim();
 
   img.style.height = winDim.y + "px";

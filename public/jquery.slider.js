@@ -74,7 +74,7 @@ $(document).ready(function(){
     let img = $(this).children("img");
     let w = img[0].naturalWidth;
     let h = img[0].naturalHeight;
-    window.open($(this).attr("href"), "MsgWindow", `width=${w},height=${h},location=no,status=no,titlebar=no`);
+    window.open($(this).attr("href"), "_blank", `width=${w},height=${h},location=no,status=no,titlebar=no`);
     return false;
   });
 
