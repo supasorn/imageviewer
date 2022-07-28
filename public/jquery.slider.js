@@ -71,15 +71,11 @@ $(document).ready(function(){
   });
 
   $("a.apreview").click(function(e) {
-    /*
-    console.log("click");
     let img = $(this).children("img");
-    console.log();
     let w = img[0].naturalWidth;
     let h = img[0].naturalHeight;
-    window.open($(this).attr("href"), "MsgWindow", `width=${w},height=${h}`);
-
-    return false;*/
+    window.open($(this).attr("href"), "MsgWindow", `width=${w},height=${h},location=no,status=no,titlebar=no`);
+    return false;
   });
 
 });

@@ -39,7 +39,8 @@ function getLRScript() {
 
 app.use('/live/', (req, res) => {
   console.log(req.path);
-  out = "";
+  out = "<style>body{margin: 0; text-align: center;background-color:#333333;}</style>";
+  out += "<script src='/static/image_resizer.js'></script>";
   if (path.extname(req.path) == ".mp4")
     out += `<video loop src='${req.path}' autoplay muted></video>`;
   else
