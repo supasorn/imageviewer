@@ -67,7 +67,7 @@ $(document).ready(function(){
     setItemSize(1);
   });
   $("#size_increase").click(function(e) {
-    setItemSize(+1);
+    setItemSize(-1);
   });
 
   $("a.apreview").click(function(e) {
