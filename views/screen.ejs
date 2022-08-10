@@ -1,0 +1,93 @@
+<html>
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="/static/winbox.bundle.min.js"></script>
+<style>
+
+.wb-title {
+  line-height: 20px;
+}
+  .wb-body {
+    top: 20px;
+} 
+.wb-icon {
+    height: 20px;
+}
+  img.content {
+    width: 100%;
+  }
+</style>
+
+  <script>
+  function showMessage(message) {
+    // document.body.innerHTML += message;
+  }
+
+  var timer;
+  function addNewWindow(json) {
+    new WinBox({
+      class: ["no-full", "no-animation", "no-shadow"],
+      x: 100,
+      y: 100,
+      width: json["w"] + "px",
+      height: (parseInt(json["h"]) + 20) + "px",
+      title: json["path"],
+      // $(this).attr("imgpath"),
+      border: "2px solid #555555",
+      html: `<img src="/${json["path"]}" class="content">`,
+      onresize: function(width, height) {
+        let img = this.window.getElementsByClassName("content")[0];
+        this.height = this.width * json["h"] / json["w"] + 20;
+
+        // console.log($(this.window).attr("class"));
+        // console.log($(this.window).attr("class"));
+        // console.log($(this.window).hasClass("max"));
+        // if (!$(this.window).hasClass("min") && !$(this.window).hasClass("max")) {
+          // this.width = img.clientWidth; 
+          // this.height = img.clientHeight + 20; 
+        // let vthis = this;
+        // clearTimeout(timer);
+        // timer = setTimeout(function(){ 
+          // vthis.width = img.clientWidth; 
+          // vthis.height = img.clientHeight + 20; 
+          // vthis.resize();
+        // }, 100);
+        // }
+      },
+
+    });
+  }
+
+  async function subscribe() {
+    let response = await fetch("/subscribe?rand="+Math.random());
+
+    if (response.status == 502) {
+      // Status 502 is a connection timeout error,
+        // may happen when the connection was pending for too long,
+        // and the remote server or a proxy closed it
+      // let's reconnect
+      await subscribe();
+    } else if (response.status != 200) {
+      // An error - let's show it
+      showMessage(response.statusText);
+      // Reconnect in one second
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe();
+    } else {
+      // Get and show the message
+      let message = await response.text();
+      let json = JSON.parse(message);
+      showMessage(json);
+      addNewWindow(json);
+      // Call subscribe() again to get the next message
+
+      await subscribe();
+    }
+  }
+
+subscribe();
+  </script>
+</head>
+<body>
+</body>
+</html>

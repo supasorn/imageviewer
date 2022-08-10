@@ -5,8 +5,11 @@ const express = require('express');
 const process = require('process');
 const globp = require('glob-promise')
 const fs = require('fs');
+const imagesize = require('image-size');
 
 let root='/home/supasorn/neodpm/';
+var resq = [];
+
 if (process.argv.length == 3) {
   root = process.argv[2]
 }
@@ -80,6 +83,52 @@ function sortByModifiedTime(files) {
   .map(function (v) {
     return v.name; });
 }
+app.use('/subscribe', async(req, res) => {
+  resq.push(res);
+  console.log("newsubscribe");
+  // console.log(resq);
+});
+
+app.use('/screen', async(req, res) => {
+  res.render('screen', {});
+});
+
+app.use('/add_window', async(req, res) => {
+  resq.forEach((rs) => {
+    const rand = Math.random().toString(16).substr(2, 8);
+    console.log(path.join(root, req.query.path));
+    console.log(imagesize(path.join(root, req.query.path)));
+    imagesize(path.join(root, req.query.path), function (err, size) {
+      if (!err) {
+        rs.send({
+          "id": rand,
+          "path": req.query.path,
+          "w": size.width,
+          "h": size.height,
+        });
+        rs.end();
+      } else {
+        rs.send(404);
+        res.end();
+      }
+    });
+  });
+  resq = [];
+  res.send("done");
+  res.end();
+  // const path = 'window.json';
+  // let json = null;
+  // if (fs.existsSync(path)) {
+    // console.log("in");
+    // let rawdata = fs.readFileSync(path);
+    // json = JSON.parse(rawdata);
+    // console.log("json", json);
+    // json = [{"id": 1}, {"id": 2}]
+  // }
+  // const jsonString = JSON.stringify(json);
+  // fs.writeFileSync(path, jsonString)
+});
+
 
 app.use('/browse', async(req, res) => {
   const fl = req.query.fl;
