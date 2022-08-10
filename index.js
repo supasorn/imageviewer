@@ -6,6 +6,7 @@ const process = require('process');
 const globp = require('glob-promise')
 const fs = require('fs');
 const imagesize = require('image-size');
+const bodyParser = require('body-parser');
 
 let root='/home/supasorn/neodpm/';
 var resq = [];
@@ -27,6 +28,8 @@ liveReloadServer.server.once("connection", () => {
 const app = express();
 
 // monkey patch every served HTML so they know of changes
+// app.use(bodyParser.urlencoded());
+app.use(express.json());
 app.use(connectLivereload());
 app.set('view engine', 'ejs');
 app.use(express.static(root));
@@ -93,16 +96,36 @@ app.use('/screen', async(req, res) => {
   res.render('screen', {});
 });
 
+app.use('/load_windows', async(req, res) => {
+  const path = 'screen.json_dat';
+  let json = null;
+  if (fs.existsSync(path)) {
+    let rawdata = fs.readFileSync(path);
+    json = JSON.parse(rawdata);
+    res.send(json);
+    res.end();
+  }
+
+});
+app.post('/save_window', async(req, res) => {
+  // console.log("data");
+  // console.log(req.body);
+  const path = 'screen.json_dat';
+  // const jsonString = JSON.stringify(json);
+  fs.writeFileSync(path, JSON.stringify(req.body));
+  res.send(req.body);
+  res.end();
+});
 app.use('/add_window', async(req, res) => {
   resq.forEach((rs) => {
     const rand = Math.random().toString(16).substr(2, 8);
-    console.log(path.join(root, req.query.path));
-    console.log(imagesize(path.join(root, req.query.path)));
+    // console.log(path.join(root, req.query.path));
+    // console.log(imagesize(path.join(root, req.query.path)));
     imagesize(path.join(root, req.query.path), function (err, size) {
       if (!err) {
         rs.send({
           "id": rand,
-          "path": req.query.path,
+          "title": req.query.path,
           "w": size.width,
           "h": size.height,
         });

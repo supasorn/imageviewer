@@ -171,7 +171,7 @@
   <div>
     
     <table><tr><td class="preview">
-    <a href='/live/<%= img.fullpath %>' class='apreview' imgpath='<%= img.fullpath %>'>
+    <a href='<%= img.fullpath %>' class='toscreen' imgpath='<%= img.fullpath %>'>
     <% if (img.basename.endsWith(".mp4")) { %>
     <video loop src='/<%= img.fullpath %>' autoplay muted></video>
     <% } else { %>

@@ -75,25 +75,16 @@ $(document).ready(function(){
     let w = img[0].naturalWidth;
     let h = img[0].naturalHeight;
     window.open($(this).attr("href"), "_blank", `width=${w},height=${h},location=no,status=no,titlebar=no`);
-    new WinBox({
-      class: "modern",
-      width: w + "px",
-      height: h + "px",
-      title: $(this).attr("imgpath"),
-      border: "2px solid #555555",
-      html: `<img src="/${$(this).attr("imgpath")}" class="content">`,
-      onresize: function(width, height) {
-        let img = this.window.getElementsByClassName("content")[0];
+    return false;
+  });
 
-        img.style.height = height + "px";
-        img.style.width = null;
-        if (img.offsetWidth > width) {
-          img.style.height = null;
-          img.style.width = width + "px";
-        }
-      },
-
+  $("a.toscreen").click(function(e) {
+    $.ajax({
+      url: '/add_window',
+      type: "GET",
+      data: {path: $(this).attr("imgpath")},
     });
+    e.preventDefault();
     return false;
   });
 

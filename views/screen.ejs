@@ -16,46 +16,85 @@
   img.content {
     width: 100%;
   }
+.winbox {
+  background-color: #3558a4;
+}
 </style>
 
   <script>
+  
+  var windows = [];
   function showMessage(message) {
     // document.body.innerHTML += message;
   }
-
   var timer;
+
+  function saveWindows() {
+    let data = [];
+    for (i in windows) {
+      const w = windows[i];
+      data.push({
+        "x": w.x, "y": w.y, 
+        "w": w.width, 
+        "h": w.height,
+        "title": w.title,
+        "min": w.min,
+        "max": w.max
+      });
+    }
+    console.log(JSON.stringify(data));
+    $.ajax({
+      url: '/save_window',
+      type: "POST",
+      data: JSON.stringify(data),
+      contentType: "application/json",
+      complete: function(data) {
+        console.log("JSON return");
+        console.log(data.responseJSON)
+        // let json = JSON.parse(data);
+        // console.log("JSON:" + json);
+        // alert(data);
+      }
+    });
+  }
+  function saveWindowTimer() {
+    clearTimeout(timer);
+    timer = setTimeout(function(){ 
+      saveWindows();
+    }, 100);
+  }
   function addNewWindow(json) {
-    new WinBox({
+    console.log("addnewwindow", json);
+    windows.push(new WinBox({
       class: ["no-full", "no-animation", "no-shadow"],
-      x: 100,
-      y: 100,
+      x: json["x"] || 100,
+      y: json["y"] || 100,
       width: json["w"] + "px",
       height: (parseInt(json["h"]) + 20) + "px",
-      title: json["path"],
-      // $(this).attr("imgpath"),
+      title: json["title"],
+      max: json["max"] || false,
       border: "2px solid #555555",
-      html: `<img src="/${json["path"]}" class="content">`,
+      html: `<img src="/${json["title"]}" class="content">`,
       onresize: function(width, height) {
         let img = this.window.getElementsByClassName("content")[0];
         this.height = this.width * json["h"] / json["w"] + 20;
-
-        // console.log($(this.window).attr("class"));
-        // console.log($(this.window).attr("class"));
-        // console.log($(this.window).hasClass("max"));
-        // if (!$(this.window).hasClass("min") && !$(this.window).hasClass("max")) {
-          // this.width = img.clientWidth; 
-          // this.height = img.clientHeight + 20; 
-        // let vthis = this;
-        // clearTimeout(timer);
-        // timer = setTimeout(function(){ 
-          // vthis.width = img.clientWidth; 
-          // vthis.height = img.clientHeight + 20; 
-          // vthis.resize();
-        // }, 100);
-        // }
+        saveWindowTimer();
       },
-
-    });
+      onmove: saveWindowTimer,
+      onmaximize: saveWindowTimer,
+      onminimize: saveWindowTimer,
+      onclose: function() {
+        windows = windows.filter((v) => {return v != this;});
+        saveWindowTimer();
+      },
+      oncreate: function() {
+        // this.move();
+        setTimeout(() => {
+          this.minimize(json["min"] || false);
+        }, 1000);
+      }
+    }));
+      
   }
 
   async function subscribe() {
@@ -85,7 +124,21 @@
     }
   }
 
-subscribe();
+  $(function() {
+    $.ajax({
+      url: '/load_windows',
+      type: "POST",
+      contentType: "application/json",
+      complete: function(data) {
+        console.log("total windows", data.responseJSON.length);
+        data.responseJSON.forEach((w) => {
+          w["h"] -= 20;
+          addNewWindow(w);
+        });
+      }
+    });
+    subscribe();
+  });
   </script>
 </head>
 <body>
