@@ -1,7 +1,9 @@
 <html>
 <head>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="/static/winbox.bundle.min.js"></script>
+  <script src="/static/screen.js"></script>
 <style>
 
 .wb-title {
@@ -16,131 +18,82 @@
   img.content {
     width: 100%;
   }
+.imgcontent {
+  width: 100%;
+}
 .winbox {
   background-color: #3558a4;
 }
+body {
+  margin: 0px;
+  font-family: 'Google Sans', sans-serif;
+}
+.mywindow {
+  position: absolute;
+  width: 100;
+  height: 200;
+    background-color: #CCCCCC;
+  border-radius: 5px 5px 0px 0px;
+
+}
+.header {
+  width: 100%;
+  height: 20px;
+  background-color: #3558a4;
+  border-radius: 5px 5px 0px 0px;
+}
+.title {
+  font-size: 13px;
+  padding: 5px;
+  color: white;
+  user-select: none;
+}
+
+.buttons {
+  background-color: #3558a4;
+  cursor: pointer;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  color: white;
+  border-radius: 5px 5px 0px 0px;
+}
+.buttons img {
+  float: right;
+    width: 19px;
+    height: 19px;
+      -webkit-filter: invert(100%);
+    filter: invert(100%);
+ -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+#template {
+  display: none;
+}
+.content  img {
+ -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
 </style>
 
-  <script>
-  
-  var windows = [];
-  function showMessage(message) {
-    // document.body.innerHTML += message;
-  }
-  var timer;
-
-  function saveWindows() {
-    let data = [];
-    for (i in windows) {
-      const w = windows[i];
-      data.push({
-        "x": w.x, "y": w.y, 
-        "w": w.width, 
-        "h": w.height,
-        "title": w.title,
-        "min": w.min,
-        "max": w.max
-      });
-    }
-    console.log(JSON.stringify(data));
-    $.ajax({
-      url: '/save_window',
-      type: "POST",
-      data: JSON.stringify(data),
-      contentType: "application/json",
-      complete: function(data) {
-        console.log("JSON return");
-        console.log(data.responseJSON)
-        // let json = JSON.parse(data);
-        // console.log("JSON:" + json);
-        // alert(data);
-      }
-    });
-  }
-  function saveWindowTimer() {
-    clearTimeout(timer);
-    timer = setTimeout(function(){ 
-      saveWindows();
-    }, 100);
-  }
-  function addNewWindow(json) {
-    console.log("addnewwindow", json);
-    windows.push(new WinBox({
-      class: ["no-full", "no-animation", "no-shadow"],
-      x: json["x"] || 100,
-      y: json["y"] || 100,
-      width: json["w"] + "px",
-      height: (parseInt(json["h"]) + 20) + "px",
-      title: json["title"],
-      max: json["max"] || false,
-      border: "2px solid #555555",
-      html: `<img src="/${json["title"]}" class="content">`,
-      onresize: function(width, height) {
-        let img = this.window.getElementsByClassName("content")[0];
-        this.height = this.width * json["h"] / json["w"] + 20;
-        saveWindowTimer();
-      },
-      onmove: saveWindowTimer,
-      onmaximize: saveWindowTimer,
-      onminimize: saveWindowTimer,
-      onclose: function() {
-        windows = windows.filter((v) => {return v != this;});
-        saveWindowTimer();
-      },
-      oncreate: function() {
-        // this.move();
-        setTimeout(() => {
-          this.minimize(json["min"] || false);
-        }, 1000);
-      }
-    }));
-      
-  }
-
-  async function subscribe() {
-    let response = await fetch("/subscribe?rand="+Math.random());
-
-    if (response.status == 502) {
-      // Status 502 is a connection timeout error,
-        // may happen when the connection was pending for too long,
-        // and the remote server or a proxy closed it
-      // let's reconnect
-      await subscribe();
-    } else if (response.status != 200) {
-      // An error - let's show it
-      showMessage(response.statusText);
-      // Reconnect in one second
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await subscribe();
-    } else {
-      // Get and show the message
-      let message = await response.text();
-      let json = JSON.parse(message);
-      showMessage(json);
-      addNewWindow(json);
-      // Call subscribe() again to get the next message
-
-      await subscribe();
-    }
-  }
-
-  $(function() {
-    $.ajax({
-      url: '/load_windows',
-      type: "POST",
-      contentType: "application/json",
-      complete: function(data) {
-        console.log("total windows", data.responseJSON.length);
-        data.responseJSON.forEach((w) => {
-          w["h"] -= 20;
-          addNewWindow(w);
-        });
-      }
-    });
-    subscribe();
-  });
-  </script>
 </head>
 <body>
+  <div class="mywindow" id="template">
+    <div class="header">
+      <span class="title">result.png</span>
+      <div class="buttons">
+        <img src="/static/images/close.png" class="button_close">
+        <img src="/static/images/full.png" class="button_max">
+        <img src="/static/images/min.png" class="button_min">
+      </div>
+    </div>
+    <div class="content" draggable="false"></div>
+  </div>
 </body>
 </html>
