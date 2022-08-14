@@ -119,22 +119,11 @@ app.post('/save_window', async(req, res) => {
 app.use('/add_window', async(req, res) => {
   resq.forEach((rs) => {
     const rand = Math.random().toString(16).substr(2, 8);
-    // console.log(path.join(root, req.query.path));
-    // console.log(imagesize(path.join(root, req.query.path)));
-    imagesize(path.join(root, req.query.path), function (err, size) {
-      if (!err) {
-        rs.send({
-          "id": rand,
-          "title": req.query.path,
-          "w": size.width,
-          "h": size.height,
-        });
-        rs.end();
-      } else {
-        rs.send(404);
-        res.end();
-      }
+    rs.send({
+      "id": rand,
+      "path": req.query.path,
     });
+    rs.end();
   });
   resq = [];
   res.send("done");

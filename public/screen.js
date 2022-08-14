@@ -23,7 +23,6 @@
         // "max": w.max
       // });
     // }
-    console.log("HERE");
     $(".mywindow").each(function(k ,v) {
       if ($(v).attr('id') != "template") {
 
@@ -33,21 +32,18 @@
           "y": of.top, 
           "w": $(v).width(), 
           "h": $(v).height(),
-          "title": $(v).find(".title").text(),
+          "path": $(v).data("path"),
           "min": false,
           "max": false
         });
       }
     });
-    console.log(JSON.stringify(data));
     $.ajax({
       url: '/save_window',
       type: "POST",
       data: JSON.stringify(data),
       contentType: "application/json",
       complete: function(data) {
-        console.log("JSON return");
-        console.log(data.responseJSON)
       }
     });
   }
@@ -97,14 +93,33 @@
   function createWindow(opts) {
     let nwin = $("#template").clone().removeAttr('id');
     $("#template").after(nwin);
-    nwin.find(".content").html(`<img src="/${opts["title"]}" class="imgcontent" draggable="false">`,);
-    nwin.find(".title").html(opts["title"]);
-    nwin.css({
-      "left": opts["x"],
-      "top": opts["y"],
-      "width": opts["w"] + "px",
-      "height": parseInt(opts["h"] + 20) + "px"});
+
+    nwin.data("path", opts["path"]);
+    nwin.data("fixed_aspect", opts["fixed_aspect"] || false);
+    nwin.find(".title").html(opts["path"]);
+
+    var image = new Image();
+    image.onload = function() {
+      this.setAttribute("class", "imgcontent");
+      this.setAttribute("draggable", "false");
+      nwin.data("nw", this.naturalWidth);
+      nwin.data("nh", this.naturalHeight);
+      
+      nwin.css("left", opts["x"] || 100);
+      nwin.css("top", opts["y"] || 100);
+      nwin.css("width", opts["w"] || nwin.data("nw") + "px");
+      nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
+      nwin.show();
+    }
+    image.src = "/" + opts["path"];
+    nwin.find(".content").append(image);
+    nwin.show();
   }
+
+  function createWindowFromImage(imagepath) {
+    createWindow({"path": imagepath, "fixed_aspect": true});
+  }
+
 
   async function subscribe() {
     let response = await fetch("/subscribe?rand="+Math.random());
@@ -120,7 +135,8 @@
       let json = JSON.parse(message);
       showMessage(json);
       // addNewWindow(json);
-      createWindow(json);
+      // createWindow(json);
+      createWindowFromImage(json["path"]);
       refresh();
       await subscribe();
     }
@@ -131,14 +147,14 @@
     var relX = e.pageX - offset.left;
     var relY = e.pageY - offset.top; 
 
-    const SIZE = 10;
+    const SIZE = 7;
     let px = "", py = "";
-    if (relX < SIZE) 
+    if (relX < SIZE && !$(element).data("fixed_aspect")) 
       px = "w";
     else if (relX > $(element).width() - SIZE) 
       px = "e";
 
-    if (relY < SIZE) 
+    if (relY < SIZE && !$(element).data("fixed_aspect"))  
       py = "n";
     else if (relY > $(element).height() - SIZE) 
       py = "s";
@@ -171,10 +187,16 @@
     });
     $(".mywindow").mousemove(function(e) {
       const [px, py] = IsOnBorder(e, this);
-      if (px != "" || py != "")
-        $(this).css("cursor", py + px + "-resize");
-      else
+      if (px == "" && py == "") 
         $(this).css("cursor", "move");
+      else if (px != "" && py =="")
+        $(this).css("cursor", "ew-resize");
+      else if (px == "" && py != "") 
+        $(this).css("cursor", "ns-resize");
+      else if ((px == "e" && py == "n") || (px == "w" && py == "s"))
+        $(this).css("cursor", "nesw-resize");
+      else
+        $(this).css("cursor", "nwse-resize");
     });
     $(document).mousemove(function(e) {
       if (action == 1) {
@@ -183,23 +205,32 @@
           "top": lasty + (e.pageY - lastmy)
         });
       } else if (action == 2) {
-          console.log(lpx, lpy);
-        if (lpx == 'w') {
-          awin.css("width", lastw + (lastmx - e.pageX));
-          awin.css("left", lastx + (e.pageX - lastmx));
-        } else if (lpx == 'e') {
-          awin.css("width", lastw + (e.pageX - lastmx));
+        
+
+        const MINW = 100;
+        const MINH = 40;
+        if (awin.data("fixed_aspect")) {
+          if (lpx == 'e' && lastw + (e.pageX - lastmx) >= MINW) {
+            awin.css("width", lastw + (e.pageX - lastmx));
+            awin.css("height", awin.width() * awin.data("nh") / awin.data("nw") + 20);
+          } else if (lpy == 's' && lasth + (e.pageY - lastmy) >= MINH) {
+            awin.css("height", lasth + (e.pageY - lastmy));
+            awin.css("width", (awin.height() - 20) * awin.data("nw") / awin.data("nh"));
+          }
+        } else {
+          if (lpx == 'w' && lastw + lastmx - e.pageX >= MINW) {
+            awin.css("width", lastw + (lastmx - e.pageX));
+            awin.css("left", lastx + (e.pageX - lastmx));
+          } else if (lpx == 'e' && lastw + (e.pageX - lastmx) >= MINW) {
+            awin.css("width", lastw + (e.pageX - lastmx));
+          }
+          if (lpy == 'n' && lasth + (lastmy - e.pageY) >= MINH) {
+            awin.css("height", lasth + (lastmy - e.pageY));
+            awin.css("top", lasty + (e.pageY - lastmy));
+          } else if (lpy == 's' && lasth + (e.pageY - lastmy) >= MINH) {
+            awin.css("height", lasth + (e.pageY - lastmy));
+          }
         }
-        if (lpy == 'n') {
-          awin.css("height", lasth + (lastmy - e.pageY));
-          awin.css("top", lasty + (e.pageY - lastmy));
-        } else if (lpy == 's') {
-          awin.css("height", lasth + (e.pageY - lastmy));
-        }
-        // awin.css({
-        //   "width": lastx + (e.pageX - lastmx),
-        //   "top": lasty + (e.pageY - lastmy)
-        // });
       }
       if (action != 0) {
         saveWindowTimer();
@@ -216,6 +247,7 @@
         data.responseJSON.forEach((w) => {
           w["h"] -= 20;
           // addNewWindow(w);
+          w["fixed_aspect"] = true;
           createWindow(w);
         });
         refresh();
