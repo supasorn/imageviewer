@@ -90,6 +90,46 @@
       
   }
 
+  function createFinder(opts) {
+    let nwin = $("#template").clone().removeAttr('id');
+    $("#template").after(nwin);
+
+    nwin.data("path", opts["path"]);
+    nwin.data("fixed_aspect", false);
+    nwin.find(".title").html(opts["path"]);
+
+    var iframe = document.createElement('iframe');
+    iframe.style.display = "none";
+    iframe.src = opts["path"];
+    nwin.find(".content").append(iframe);
+    nwin.show();
+  }
+  
+  function findEmptyXY() {
+    for (let i = 50; 1; i+=50) {
+      let conflict = 0;
+      $(".mywindow").each(function() {
+        console.log($(this).offset().left, $(this).offset().top);
+        if (Math.abs($(this).offset().left - i) < 50 || Math.abs($(this).offset().top - i) < 50) {
+          conflict = 1;
+          return false;
+        }
+      });
+      if (!conflict)
+        return [i, i];
+    }
+    return [0, 0];
+  }
+
+  function topZIndex() {
+    let mx = 0;
+    $(".mywindow").each(function() {
+      if (parseInt($(this).css("z-index")) > mx)
+        mx = parseInt($(this).css("z-index"));
+    });
+    return mx;
+  }
+
   function createWindow(opts) {
     let nwin = $("#template").clone().removeAttr('id');
     $("#template").after(nwin);
@@ -104,22 +144,26 @@
       this.setAttribute("draggable", "false");
       nwin.data("nw", this.naturalWidth);
       nwin.data("nh", this.naturalHeight);
-      
-      nwin.css("left", opts["x"] || 100);
-      nwin.css("top", opts["y"] || 100);
+
+      if (opts["x"] === undefined || opts["y"] == undefined) {
+        [opts["x"], opts["y"]] = findEmptyXY();
+      } 
+
+      nwin.css("left", opts["x"]);
+      nwin.css("top", opts["y"]);
       nwin.css("width", opts["w"] || nwin.data("nw") + "px");
       nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
       nwin.show();
     }
     image.src = "/" + opts["path"];
     nwin.find(".content").append(image);
+    nwin.css("z-index", topZIndex() + 1);
     nwin.show();
   }
 
   function createWindowFromImage(imagepath) {
     createWindow({"path": imagepath, "fixed_aspect": true});
   }
-
 
   async function subscribe() {
     let response = await fetch("/subscribe?rand="+Math.random());
@@ -171,7 +215,7 @@
       lasth = $(this).height();
       lastmx = e.pageX;
       lastmy = e.pageY;
-      $(this).css("z-index", 99999);
+      $(this).css("z-index", topZIndex() + 1);
       awin = $(this);
       if (lpx == "" && lpy == "") {
         action = 1;
@@ -184,6 +228,9 @@
     });
     $(document).mouseup(function(e) {
       action = 0;
+    });
+    $(".button_close").click(function() {
+      $(this).closest(".mywindow").remove();
     });
     $(".mywindow").mousemove(function(e) {
       const [px, py] = IsOnBorder(e, this);
@@ -254,6 +301,7 @@
       }
     });
     subscribe();
+    // createFinder({"path": "/browse"});
     refresh();
 
   });
