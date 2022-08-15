@@ -107,6 +107,27 @@ app.use('/load_windows', async(req, res) => {
   }
 
 });
+
+app.use('/directory/', async(req, res) => {
+  let urlpath = req.path;
+  if (urlpath[urlpath.length - 1] != '/')
+    urlpath = urlpath + '/';
+  // console.log("path", urlpath);
+  // console.log(path.join(root, urlpath, '/*/'));
+
+  const sdir = await globp(`${root}/${urlpath}/*/`);
+
+  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,mp4}`, {nodir: true});
+  smedia = sortByModifiedTime(smedia);
+
+  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.mp4)`, {nodir: true});
+  const s = sdir.concat(smedia, sfile);
+
+  // res.send({"path": urlpath, "data": s.map(x => path.basename(x)) });
+  res.send({"path": urlpath, "ls": s.map (x => x.replace(path.join(root, urlpath), "")) });
+  res.end();
+
+});
 app.post('/save_window', async(req, res) => {
   // console.log("data");
   // console.log(req.body);

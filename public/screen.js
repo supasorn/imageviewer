@@ -34,7 +34,7 @@
           "h": $(v).height(),
           "path": $(v).data("path"),
           "min": false,
-          "max": false
+          "max": false,
         });
       }
     });
@@ -90,21 +90,6 @@
       
   }
 
-  function createFinder(opts) {
-    let nwin = $("#template").clone().removeAttr('id');
-    $("#template").after(nwin);
-
-    nwin.data("path", opts["path"]);
-    nwin.data("fixed_aspect", false);
-    nwin.find(".title").html(opts["path"]);
-
-    var iframe = document.createElement('iframe');
-    iframe.style.display = "none";
-    iframe.src = opts["path"];
-    nwin.find(".content").append(iframe);
-    nwin.show();
-  }
-  
   function findEmptyXY() {
     for (let i = 50; 1; i+=50) {
       let conflict = 0;
@@ -135,30 +120,70 @@
     $("#template").after(nwin);
 
     nwin.data("path", opts["path"]);
-    nwin.data("fixed_aspect", opts["fixed_aspect"] || false);
     nwin.find(".title").html(opts["path"]);
 
-    var image = new Image();
-    image.onload = function() {
-      this.setAttribute("class", "imgcontent");
-      this.setAttribute("draggable", "false");
-      nwin.data("nw", this.naturalWidth);
-      nwin.data("nh", this.naturalHeight);
-
-      if (opts["x"] === undefined || opts["y"] == undefined) {
-        [opts["x"], opts["y"]] = findEmptyXY();
-      } 
-
-      nwin.css("left", opts["x"]);
-      nwin.css("top", opts["y"]);
-      nwin.css("width", opts["w"] || nwin.data("nw") + "px");
-      nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
-      nwin.show();
+    let ext = opts["path"].split(".");
+    console.log(ext);
+    if (ext.length == 1) {
+      opts["type"] = "finder"
+      nwin.data("type", "finder");
+      nwin.data("fixed_aspect", false);
+    } else if (ext[1] == "png") {
+      opts["type"] = "image"
+      nwin.data("type", "image");
+      nwin.data("fixed_aspect", true);
     }
-    image.src = "/" + opts["path"];
-    nwin.find(".content").append(image);
+    console.log(opts["type"]);
+
+    nwin.css("left", opts["x"]);
+    nwin.css("top", opts["y"]);
+    if (opts["type"] == "image") {
+      var image = new Image();
+      image.onload = function() {
+        this.setAttribute("class", "imgcontent");
+        this.setAttribute("draggable", "false");
+        nwin.data("nw", this.naturalWidth);
+        nwin.data("nh", this.naturalHeight);
+
+        if (opts["x"] === undefined || opts["y"] == undefined) {
+          [opts["x"], opts["y"]] = findEmptyXY();
+        } 
+
+        nwin.css("width", opts["w"] || nwin.data("nw") + "px");
+        nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
+        nwin.show();
+      }
+      image.src = "/" + opts["path"];
+      nwin.find(".content").append(image);
+    } else if (opts["type"] == "finder") {
+      function updateFinder() {
+        $.get("/directory" + nwin.data("path"), function(data, status) {
+          let html = "<ul>";
+          html += `<li><a href='#' class="finder_folder">../</a></li>`;
+          for (let i in data["ls"])
+            html += `<li><a href="#" class="finder_folder">${data["ls"][i]}</a></li>`
+          html += "</ul>";
+          nwin.find(".content").html(html);
+          nwin.find(".content").css("height", "calc(100% - 20px)");
+          nwin.find(".content").css("overflow", "scroll");
+          // let json = JSON.parse(data);
+          // console.log(data);
+          // console.log(json);
+          nwin.css("width", "500px");
+          nwin.css("height", "500px");
+          nwin.show();
+          nwin.find(".finder_folder").click(function(e) {
+            nwin.data("path", nwin.data("path") + $(this).text());
+            console.log(nwin.data("path"));
+            updateFinder();
+            // alert("click");
+            e.preventDefault();
+          });
+        });
+      }
+      updateFinder();
+    }
     nwin.css("z-index", topZIndex() + 1);
-    nwin.show();
   }
 
   function createWindowFromImage(imagepath) {
@@ -198,16 +223,16 @@
     else if (relX > $(element).width() - SIZE) 
       px = "e";
 
-    if (relY < SIZE && !$(element).data("fixed_aspect"))  
+    if (relY < SIZE && !$(element).data("fixed_aspect") && false)  
       py = "n";
     else if (relY > $(element).height() - SIZE) 
       py = "s";
-    return [px, py];
+    return [px, py, relX, relY];
   }
 
   function refresh() {
     $(".mywindow").mousedown(function(e) {
-      [lpx, lpy] = IsOnBorder(e, this);
+      [lpx, lpy, relX, relY] = IsOnBorder(e, this);
       const of = $(this).offset();
       lastx = of.left;
       lasty = of.top;
@@ -231,12 +256,20 @@
     });
     $(".button_close").click(function() {
       $(this).closest(".mywindow").remove();
+      saveWindows();
     });
     $(".mywindow").mousemove(function(e) {
-      const [px, py] = IsOnBorder(e, this);
-      if (px == "" && py == "") 
-        $(this).css("cursor", "move");
-      else if (px != "" && py =="")
+      const [px, py, relX, relY] = IsOnBorder(e, this);
+      if (px == "" && py == "") { 
+        if ($(this).data("type") == "finder") {
+          if (relY < 20)
+            $(this).css("cursor", "move");
+          else
+            $(this).css("cursor", "auto");
+        } else {
+          $(this).css("cursor", "move");
+        }
+      } else if (px != "" && py =="")
         $(this).css("cursor", "ew-resize");
       else if (px == "" && py != "") 
         $(this).css("cursor", "ns-resize");
@@ -252,11 +285,13 @@
           "top": lasty + (e.pageY - lastmy)
         });
       } else if (action == 2) {
+        // console.log("action2");
         
 
         const MINW = 100;
         const MINH = 40;
         if (awin.data("fixed_aspect")) {
+          console.log("a");
           if (lpx == 'e' && lastw + (e.pageX - lastmx) >= MINW) {
             awin.css("width", lastw + (e.pageX - lastmx));
             awin.css("height", awin.width() * awin.data("nh") / awin.data("nw") + 20);
@@ -265,6 +300,7 @@
             awin.css("width", (awin.height() - 20) * awin.data("nw") / awin.data("nh"));
           }
         } else {
+          console.log("b");
           if (lpx == 'w' && lastw + lastmx - e.pageX >= MINW) {
             awin.css("width", lastw + (lastmx - e.pageX));
             awin.css("left", lastx + (e.pageX - lastmx));
@@ -294,14 +330,13 @@
         data.responseJSON.forEach((w) => {
           w["h"] -= 20;
           // addNewWindow(w);
-          w["fixed_aspect"] = true;
           createWindow(w);
         });
         refresh();
       }
     });
     subscribe();
-    // createFinder({"path": "/browse"});
+    // createWindow({"path": "/"});
     refresh();
 
   });
