@@ -120,23 +120,22 @@
     } else if (opts["type"] == "finder") {
       function updateFinder(path, save_windows=false) {
         console.log("fetch " + path);
-        $.get("/directory" + path, function(data, status) {
+        $.get("/finder" + path, function(data, status) {
           nwin.data("path", data["path"]);
-          nwin.find(".title").text(data["path"]);
-          let html = "<ul>";
-          html += `<li><a href='#' class="finder_folder">../</a></li>`;
-          for (let i in data["ls"])
-            html += `<li><a href="#" class="finder_folder">${data["ls"][i]}</a></li>`
-          html += "</ul>";
-          nwin.find(".content").html(html);
+          nwin.find(".title").text("Finder");
+
+          nwin.find(".content").html(data["html"]);
           nwin.find(".content").css("height", "calc(100% - 20px)");
           nwin.find(".content").css("overflow", "scroll");
-          // let json = JSON.parse(data);
-          // console.log(data);
-          // console.log(json);
+          nwin.find(".content").css("user-select", "none");
           nwin.show();
           if (save_windows)
             saveWindows();
+          nwin.find(".apathbar").click(function(e) {
+            console.log("pathbar", $(this).attr("href"));
+            updateFinder($(this).attr("href"), true);
+            e.preventDefault();
+          });
           nwin.find(".finder_folder").click(function(e) {
             if ($(this).text().at(-1) == "/") {
               console.log(nwin.data("path"));
@@ -144,7 +143,6 @@
             } else {
               $.get("/add_window", {"path": data["path"].slice(1) + $(this).text()});
             }
-            // alert("click");
             e.preventDefault();
           });
         });

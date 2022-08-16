@@ -1,0 +1,39 @@
+<div class="finder_header">
+  <div class="finder_pathbar">
+  <% let count = 0; %>
+  <% for (let i = 0; i < path.length; i++) { %>
+    <% if (path[i].length == 0) continue; %> 
+    <span> /
+    <% if (i < path.length - 2) { %>
+    <a href="<%= path.slice(0, i+1).join("/") %>" class="apathbar"><%= path[i] %> </a>
+    <% } else { %>
+     <%= path[i] %> 
+    <% } %>
+    </span>
+    <% count ++; %>
+  <% } %>
+  <% if (count == 0) { %>
+    <span> / </span>
+  <% } %>
+
+  </div>
+</div>
+<div class="finder_left">
+  <ul class="fa-ul">
+    <li><span class="fa-li"><i class="fa-regular fa-folder"></i></span><a href='#' class="finder_folder">../</a></li>
+    <% for (let f of list) { %>
+    <li>
+      <% if (f.at(-1) == '/') { %>
+      <span class="fa-li"><i class="fa-regular fa-folder"></i></span>
+      <% } else if (["png", "jpg"].includes(f.split(".").pop())) { %>
+      <span class="fa-li"><i class="fa-regular fa-image"></i></span>
+      <% } else if (["mp4"].includes(f.split(".").pop())) { %>
+      <span class="fa-li"><i class="fa-regular fa-circle-play"></i></span>
+      <% } else { %>
+      <!-- <span class="fa-li"><i class="fa-regular fa-file"></i></span> -->
+      <% } %>
+    <a href="#" class="finder_folder"><%= f %></a></li>
+    <% } %>
+  </ul>
+</div>
+<div class=finder_right"></div>

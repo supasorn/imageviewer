@@ -108,6 +108,30 @@ app.use('/load_windows', async(req, res) => {
 
 });
 
+app.use('/finder/', async(req, res) => {
+  let urlpath = req.path;
+  if (urlpath[urlpath.length - 1] != '/')
+    urlpath = urlpath + '/';
+
+  console.log("directory: ", urlpath);
+  // console.log(path.join(root, urlpath, '/*/'));
+
+  const sdir = await globp(`${root}/${urlpath}/*/`);
+
+  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,mp4}`, {nodir: true});
+  smedia = sortByModifiedTime(smedia);
+
+  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.mp4)`, {nodir: true});
+  const s = sdir.concat(smedia, sfile);
+
+  res.render('finder', 
+    {list: s.map (x => x.replace(path.join(root, urlpath), "")),
+      path: urlpath.split("/")
+    }, (err, html) => {
+    res.status(200).send({html, "path": urlpath});
+  });
+});
+
 app.use('/directory/', async(req, res) => {
   let urlpath = req.path;
   if (urlpath[urlpath.length - 1] != '/')
@@ -185,7 +209,7 @@ app.use('/browse', async(req, res) => {
 });
 
 
-app.use('/', (req, res) => { res.redirect('/browse'); });
+app.use('/', (req, res) => { res.redirect('/byowse'); });
 
 app.listen(1234)
 
