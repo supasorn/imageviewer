@@ -54,47 +54,10 @@
     }, 100);
   }
 
-  function addNewWindow(json) {
-    createWindow(json);
-    return;
-    console.log("addnewwindow", json);
-    windows.push(new WinBox({
-      class: ["no-full", "no-animation", "no-shadow"],
-      x: json["x"] || 100,
-      y: json["y"] || 100,
-      width: json["w"] + "px",
-      height: (parseInt(json["h"]) + 20) + "px",
-      title: json["title"],
-      max: json["max"] || false,
-      border: "2px solid #555555",
-      html: `<img src="/${json["title"]}" class="content" draggable="false">`,
-      onresize: function(width, height) {
-        let img = this.window.getElementsByClassName("content")[0];
-        this.height = this.width * json["h"] / json["w"] + 20;
-        saveWindowTimer();
-      },
-      onmove: saveWindowTimer,
-      onmaximize: saveWindowTimer,
-      onminimize: saveWindowTimer,
-      onclose: function() {
-        windows = windows.filter((v) => {return v != this;});
-        saveWindowTimer();
-      },
-      oncreate: function() {
-        // this.move();
-        setTimeout(() => {
-          this.minimize(json["min"] || false);
-        }, 1000);
-      }
-    }));
-      
-  }
-
   function findEmptyXY() {
     for (let i = 50; 1; i+=50) {
       let conflict = 0;
       $(".mywindow").each(function() {
-        console.log($(this).offset().left, $(this).offset().top);
         if (Math.abs($(this).offset().left - i) < 50 || Math.abs($(this).offset().top - i) < 50) {
           conflict = 1;
           return false;
@@ -123,7 +86,6 @@
     nwin.find(".title").html(opts["path"]);
 
     let ext = opts["path"].split(".");
-    console.log(ext);
     if (ext.length == 1) {
       opts["type"] = "finder"
       nwin.data("type", "finder");
@@ -133,8 +95,8 @@
       nwin.data("type", "image");
       nwin.data("fixed_aspect", true);
     }
-    console.log(opts["type"]);
 
+    console.log("Left", opts["x"]);
     nwin.css("left", opts["x"]);
     nwin.css("top", opts["y"]);
     if (opts["type"] == "image") {
@@ -149,15 +111,18 @@
           [opts["x"], opts["y"]] = findEmptyXY();
         } 
 
-        nwin.css("width", opts["w"] || nwin.data("nw") + "px");
+        nwin.css("width", (opts["w"] || nwin.data("nw")) + "px");
         nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
         nwin.show();
       }
       image.src = "/" + opts["path"];
       nwin.find(".content").append(image);
     } else if (opts["type"] == "finder") {
-      function updateFinder() {
-        $.get("/directory" + nwin.data("path"), function(data, status) {
+      function updateFinder(path, save_windows=false) {
+        console.log("fetch " + path);
+        $.get("/directory" + path, function(data, status) {
+          nwin.data("path", data["path"]);
+          nwin.find(".title").text(data["path"]);
           let html = "<ul>";
           html += `<li><a href='#' class="finder_folder">../</a></li>`;
           for (let i in data["ls"])
@@ -169,19 +134,24 @@
           // let json = JSON.parse(data);
           // console.log(data);
           // console.log(json);
-          nwin.css("width", "500px");
-          nwin.css("height", "500px");
           nwin.show();
+          if (save_windows)
+            saveWindows();
           nwin.find(".finder_folder").click(function(e) {
-            nwin.data("path", nwin.data("path") + $(this).text());
-            console.log(nwin.data("path"));
-            updateFinder();
+            if ($(this).text().at(-1) == "/") {
+              console.log(nwin.data("path"));
+              updateFinder(nwin.data("path") + $(this).text(), true);
+            } else {
+              $.get("/add_window", {"path": data["path"].slice(1) + $(this).text()});
+            }
             // alert("click");
             e.preventDefault();
           });
         });
       }
-      updateFinder();
+      nwin.css("width", (opts["w"] || 500) + "px");
+      nwin.css("height", (opts["h"] || 500) + 20 + "px");
+      updateFinder(nwin.data("path"));
     }
     nwin.css("z-index", topZIndex() + 1);
   }
@@ -203,7 +173,6 @@
       let message = await response.text();
       let json = JSON.parse(message);
       showMessage(json);
-      // addNewWindow(json);
       // createWindow(json);
       createWindowFromImage(json["path"]);
       refresh();
@@ -243,7 +212,8 @@
       $(this).css("z-index", topZIndex() + 1);
       awin = $(this);
       if (lpx == "" && lpy == "") {
-        action = 1;
+        if ($(this).data("type") != "finder" || relY < 20)
+          action = 1;
       } else {
         action = 2;
       }
@@ -327,9 +297,9 @@
       contentType: "application/json",
       complete: function(data) {
         console.log("total windows", data.responseJSON.length);
+        console.log(data.responseJSON);
         data.responseJSON.forEach((w) => {
           w["h"] -= 20;
-          // addNewWindow(w);
           createWindow(w);
         });
         refresh();

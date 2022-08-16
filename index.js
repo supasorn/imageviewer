@@ -112,7 +112,8 @@ app.use('/directory/', async(req, res) => {
   let urlpath = req.path;
   if (urlpath[urlpath.length - 1] != '/')
     urlpath = urlpath + '/';
-  // console.log("path", urlpath);
+
+  console.log("directory: ", urlpath);
   // console.log(path.join(root, urlpath, '/*/'));
 
   const sdir = await globp(`${root}/${urlpath}/*/`);
@@ -132,12 +133,14 @@ app.post('/save_window', async(req, res) => {
   // console.log("data");
   // console.log(req.body);
   const path = 'screen.json_dat';
+  console.log("/save_window" + JSON.stringify(req.body));
   // const jsonString = JSON.stringify(json);
   fs.writeFileSync(path, JSON.stringify(req.body));
   res.send(req.body);
   res.end();
 });
 app.use('/add_window', async(req, res) => {
+  console.log("/add_window" + req.query.path);
   resq.forEach((rs) => {
     const rand = Math.random().toString(16).substr(2, 8);
     rs.send({
