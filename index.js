@@ -113,7 +113,7 @@ app.use('/finder/', async(req, res) => {
   if (urlpath[urlpath.length - 1] != '/')
     urlpath = urlpath + '/';
 
-  console.log("directory: ", urlpath);
+  console.log("finder: ", urlpath, "slider", req.query.slide);
   // console.log(path.join(root, urlpath, '/*/'));
 
   const sdir = await globp(`${root}/${urlpath}/*/`);
@@ -130,7 +130,7 @@ app.use('/finder/', async(req, res) => {
      path: urlpath.split("/"),
      rawimglist
     }, (err, html) => {
-    res.status(200).send({html, "path": urlpath});
+    res.status(200).send({html, "path": urlpath, "slide": req.query.slide});
   });
 });
 
@@ -159,7 +159,8 @@ app.post('/save_window', async(req, res) => {
   // console.log("data");
   // console.log(req.body);
   const path = 'screen.json_dat';
-  console.log("/save_window" + JSON.stringify(req.body));
+  console.log("/save_window");
+  // console.log("/save_window" + JSON.stringify(req.body));
   // const jsonString = JSON.stringify(json);
   fs.writeFileSync(path, JSON.stringify(req.body));
   res.send(req.body);

@@ -19,41 +19,41 @@
   </div>
 </div>
 <div class="panelContainer">
-<div class="finder_left panel">
-  <ul class="fa-ul">
-    <li><span class="fa-li"><i class="fa-regular fa-folder"></i></span><a href='#' class="finder_folder">../</a></li>
-    <% for (let f of list) { %>
-    <li>
-      <% if (f.at(-1) == '/') { %>
-      <span class="fa-li"><i class="fa-regular fa-folder"></i></span>
-      <% } else if (["png", "jpg"].includes(f.split(".").pop())) { %>
-      <span class="fa-li"><i class="fa-regular fa-image"></i></span>
-      <% } else if (["mp4"].includes(f.split(".").pop())) { %>
-      <span class="fa-li"><i class="fa-regular fa-circle-play"></i></span>
-      <% } else { %>
-      <span class="fa-li">-</span>
-      <% } %>
-    <a href="#" class="finder_folder"><%= f %></a></li>
-    <% } %>
-  </ul>
-</div>
-<div class="finder_right panel flex-container">
-  <% for (let img of rawimglist) { %>
-    <div>
-      <div class="finder_image">
-        <a href='<%= img.fullpath %>' class='toscreen' imgpath='<%= img.fullpath %>'>
-        <% if (img.basename.endsWith(".mp4")) { %>
-        <video loop src='/<%= img.fullpath %>' autoplay muted></video>
+  <div class="finder_left panel">
+    <ul class="fa-ul">
+      <li><span class="fa-li"><i class="fa-regular fa-folder"></i></span><a href='#' class="finder_folder">../</a></li>
+      <% for (let f of list) { %>
+      <li>
+        <% if (f.at(-1) == '/') { %>
+        <span class="fa-li"><i class="fa-regular fa-folder"></i></span>
+        <% } else if (["png", "jpg"].includes(f.split(".").pop())) { %>
+        <span class="fa-li"><i class="fa-regular fa-image"></i></span>
+        <% } else if (["mp4"].includes(f.split(".").pop())) { %>
+        <span class="fa-li"><i class="fa-regular fa-circle-play"></i></span>
         <% } else { %>
-        <img src='/<%= img.fullpath %>' loading="lazy">
+        <span class="fa-li">-</span>
         <% } %>
+      <a href="#" class="finder_folder"><%= f %></a></li>
+      <% } %>
+    </ul>
+  </div>
+  <div class="slider"></div>
+  <div class="finder_right panel flex-container">
+    <% for (let img of rawimglist) { %>
+      <div>
+        <a href='<%= img.fullpath %>' class='aopen' imgpath='<%= img.fullpath %>'>
+        <div class="finder_image">
+          <% if (img.basename.endsWith(".mp4")) { %>
+          <video loop src='/<%= img.fullpath %>' autoplay muted></video>
+          <% } else { %>
+          <img src='/<%= img.fullpath %>' loading="lazy">
+          <% } %>
+        </div>
+        <div class="finder_label">
+          <%= img.basename %>
+        </div>
         </a>
       </div>
-      <div class="finder_label">
-        <a href='/live/<%= img.fullpath %>' class='filelink'><%= img.basename %></a>
-      </div>
-    </div>
-  <% } %>
-<span class="slider"></span>
-</div>
+    <% } %>
+  </div>
 </div>

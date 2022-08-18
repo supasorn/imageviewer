@@ -25,17 +25,21 @@
     // }
     $(".mywindow").each(function(k ,v) {
       if ($(v).attr('id') != "template") {
-
         const of = $(v).offset(); 
-        data.push({
+        o = {
           "x": of.left, 
           "y": of.top, 
+          "z-index": $(v).css("z-index"),
           "w": $(v).width(), 
           "h": $(v).height(),
           "path": $(v).data("path"),
           "min": false,
           "max": false,
-        });
+        };
+        if ($(v).find(".slider").length) {
+          o["slide"] = $(v).find(".finder_left").css("flex-basis");
+        }
+        data.push(o);
       }
     });
     $.ajax({
@@ -55,10 +59,10 @@
   }
 
   function findEmptyXY() {
-    for (let i = 50; 1; i+=50) {
+    for (let i = 50; 1; i+=30) {
       let conflict = 0;
       $(".mywindow").each(function() {
-        if (Math.abs($(this).offset().left - i) < 50 || Math.abs($(this).offset().top - i) < 50) {
+        if (Math.abs($(this).offset().left - i) < 30 && Math.abs($(this).offset().top - i) < 30) {
           conflict = 1;
           return false;
         }
@@ -96,9 +100,12 @@
       nwin.data("fixed_aspect", true);
     }
 
-    console.log("Left", opts["x"]);
+    if (opts["x"] === undefined || opts["y"] == undefined) {
+      [opts["x"], opts["y"]] = findEmptyXY();
+    } 
     nwin.css("left", opts["x"]);
     nwin.css("top", opts["y"]);
+
     if (opts["type"] == "image") {
       var image = new Image();
       image.onload = function() {
@@ -106,10 +113,6 @@
         this.setAttribute("draggable", "false");
         nwin.data("nw", this.naturalWidth);
         nwin.data("nh", this.naturalHeight);
-
-        if (opts["x"] === undefined || opts["y"] == undefined) {
-          [opts["x"], opts["y"]] = findEmptyXY();
-        } 
 
         nwin.css("width", (opts["w"] || nwin.data("nw")) + "px");
         nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
@@ -119,13 +122,13 @@
       nwin.find(".content").append(image);
     } else if (opts["type"] == "finder") {
       function updateFinder(path, save_windows=false) {
-        console.log("fetch " + path);
-        $.get("/finder" + path, function(data, status) {
+        console.log("fetch " + path + "," + (nwin.find(".finder_left").css("flex-basis") || opts["slide"]));
+        $.get("/finder" + path, {"slide": nwin.find(".finder_left").css("flex-basis") || opts["slide"]}, function(data, status) {
           nwin.data("path", data["path"]);
           nwin.find(".title").text("Finder");
-
           nwin.find(".content").html(data["html"]);
-          nwin.find(".panel").css("height", "calc(100% - 20px)");
+          nwin.find(".finder_left").css("flex-basis", data["slide"])
+          nwin.find(".panel").css("height", "calc(100% - 50px)");
           nwin.find(".content").css("user-select", "none");
           nwin.show();
           if (save_windows)
@@ -144,19 +147,39 @@
             }
             e.preventDefault();
           });
+          nwin.find(".aopen").click(function(e) {
+            createWindowFromImage($(this).attr("href"));
+            refresh();
+            e.preventDefault();
+          });
+
+          $(".slider").mousedown(function(e) {
+            awin = $(this);
+            lastmx = e.pageX;
+            lastx = parseInt($(this).prev().css("flex-basis"));
+            action = "slide";
+            e.stopImmediatePropagation();
+          });
         });
       }
       nwin.css("width", (opts["w"] || 500) + "px");
       nwin.css("height", (opts["h"] || 500) + 20 + "px");
+
+      // nwin.find(".finder_left").css("flex-basis", (opts["slide"] || 200) + "px");
       updateFinder(nwin.data("path"));
     }
-    nwin.css("z-index", topZIndex() + 1);
+
+    if (opts["z-index"] === undefined)
+      nwin.css("z-index", topZIndex() + 1);
+    else
+      nwin.css("z-index", opts["z-index"]);
   }
 
   function createWindowFromImage(imagepath) {
     createWindow({"path": imagepath, "fixed_aspect": true});
   }
 
+/*
   async function subscribe() {
     let response = await fetch("/subscribe?rand="+Math.random());
 
@@ -176,6 +199,7 @@
       await subscribe();
     }
   }
+*/
 
   function IsOnBorder(e, element) {
     var offset = $(element).offset(); 
@@ -210,9 +234,9 @@
       awin = $(this);
       if (lpx == "" && lpy == "") {
         if ($(this).data("type") != "finder" || relY < 20)
-          action = 1;
+          action = "move";
       } else {
-        action = 2;
+        action = "resize";
       }
     });
     $(".mywindow").mouseup(function(e) {
@@ -246,19 +270,25 @@
         $(this).css("cursor", "nwse-resize");
     });
     $(document).mousemove(function(e) {
-      if (action == 1) {
+      const discrete = 1;
+      if (action == "move") {
+        let nx = lastx + (e.pageX - lastmx);
+        let ny = lasty + (e.pageY - lastmy);
+        if (awin.data("fixed_aspect")) {
+          nx = Math.round(nx / 20) * 20;
+          ny = Math.round(ny / 20) * 20;
+        }
         awin.css({
-          "left": lastx + (e.pageX - lastmx),
-          "top": lasty + (e.pageY - lastmy)
+          "left": nx,
+          "top": ny 
         });
-      } else if (action == 2) {
+      } else if (action == "resize") {
         // console.log("action2");
         
 
         const MINW = 100;
         const MINH = 40;
         if (awin.data("fixed_aspect")) {
-          console.log("a");
           if (lpx == 'e' && lastw + (e.pageX - lastmx) >= MINW) {
             awin.css("width", lastw + (e.pageX - lastmx));
             awin.css("height", awin.width() * awin.data("nh") / awin.data("nw") + 20);
@@ -266,8 +296,12 @@
             awin.css("height", lasth + (e.pageY - lastmy));
             awin.css("width", (awin.height() - 20) * awin.data("nw") / awin.data("nh"));
           }
+          if (discrete) {
+            awin.css("width", Math.round((awin.width() - awin.data("nw")) / 30) * 30 + awin.data("nw") );
+            awin.css("height", awin.width() * awin.data("nh") / awin.data("nw") + 20);
+          }
+
         } else {
-          console.log("b");
           if (lpx == 'w' && lastw + lastmx - e.pageX >= MINW) {
             awin.css("width", lastw + (lastmx - e.pageX));
             awin.css("left", lastx + (e.pageX - lastmx));
@@ -281,6 +315,14 @@
             awin.css("height", lasth + (e.pageY - lastmy));
           }
         }
+      } else if (action == "slide") {
+        let neww = lastx + (e.pageX - lastmx);
+        let mw = awin.closest(".mywindow").width();
+        if (neww > mw - 10)
+          neww = mw - 10; 
+        if (neww < 0)
+          neww = 0;
+        awin.prev().css("flex-basis", neww + "px");
       }
       if (action != 0) {
         saveWindowTimer();
@@ -302,7 +344,7 @@
         refresh();
       }
     });
-    subscribe();
+    // subscribe();
     // createWindow({"path": "/"});
     refresh();
 
