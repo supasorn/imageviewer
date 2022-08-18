@@ -121,13 +121,21 @@ ul {
   /* width: 50%; */
 }
 .finder_left {
-  width: 200px;
+  flex-basis: 200px;
+	flex-grow: 0;
+	flex-shrink: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  /* width: 200px; */
   /* width: 25%; */
 }
 .finder_right {
-  background-color: #BBBBBB;
-    width: 100%;
-    align-content: flex-start;
+  background-color: #DDDDDD;
+  align-content: flex-start;
+  padding: 2px;
+  overflow: scroll;
+  /* flex-grow: 1; */
 }
 
 .flex-container img, video {
@@ -141,14 +149,15 @@ ul {
 .flex-container {
   display: flex;
   flex-wrap: wrap;
+  flex-grow: 1;
 }
 .flex-container > div {
   margin: 2px;
+  background-color: #EEEEEE;
 }
 .finder_image {
   height: 200px;
   width: 200px;
-  background-color: #f1f1f1;
   padding: 2px;
   border-radius: 2px;
   text-align: center;
@@ -162,7 +171,7 @@ ul {
   font-size: 12px;
   word-break: break-all;
   text-align: center;
-  background-color: #f1f1f1;
+  background-color: #EEEEEE;
   
 }
 </style>

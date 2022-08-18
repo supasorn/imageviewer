@@ -126,7 +126,6 @@
 
           nwin.find(".content").html(data["html"]);
           nwin.find(".panel").css("height", "calc(100% - 20px)");
-          nwin.find(".panel").css("overflow", "scroll");
           nwin.find(".content").css("user-select", "none");
           nwin.show();
           if (save_windows)
