@@ -40,19 +40,18 @@
 <div class="finder_right panel flex-container">
   <% for (let img of rawimglist) { %>
     <div>
-      
-      <table><tr><td class="preview">
-      <a href='<%= img.fullpath %>' class='toscreen' imgpath='<%= img.fullpath %>'>
-      <% if (img.basename.endsWith(".mp4")) { %>
-      <video loop src='/<%= img.fullpath %>' autoplay muted></video>
-      <% } else { %>
-      <img src='/<%= img.fullpath %>' loading="lazy">
-      <% } %>
-      </a>
-      </td></tr><tr><td class="filename">
-          <a href='/live/<%= img.fullpath %>' class='filelink'><%= img.basename %></a>
-        </td></tr></table>
-      
+      <div class="finder_image">
+        <a href='<%= img.fullpath %>' class='toscreen' imgpath='<%= img.fullpath %>'>
+        <% if (img.basename.endsWith(".mp4")) { %>
+        <video loop src='/<%= img.fullpath %>' autoplay muted></video>
+        <% } else { %>
+        <img src='/<%= img.fullpath %>' loading="lazy">
+        <% } %>
+        </a>
+      </div>
+      <div class="finder_label">
+        <a href='/live/<%= img.fullpath %>' class='filelink'><%= img.basename %></a>
+      </div>
     </div>
   <% } %>
 <span class="slider"></span>
