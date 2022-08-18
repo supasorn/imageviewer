@@ -123,10 +123,12 @@ app.use('/finder/', async(req, res) => {
 
   const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.mp4)`, {nodir: true});
   const s = sdir.concat(smedia, sfile);
+  let rawimglist = smedia.map(x => ({fullpath: x.replace(root, ""), basename: path.basename(x)}));
 
   res.render('finder', 
     {list: s.map (x => x.replace(path.join(root, urlpath), "")),
-      path: urlpath.split("/")
+     path: urlpath.split("/"),
+     rawimglist
     }, (err, html) => {
     res.status(200).send({html, "path": urlpath});
   });
