@@ -106,7 +106,7 @@
     nwin.css("left", opts["x"]);
     nwin.css("top", opts["y"]);
 
-    console.log("POS", opts["w"], opts["h"]);
+    // console.log("POS", opts["w"], opts["h"]);
 
     function finishedLoading(nwin) {
       nwin.show();
@@ -437,7 +437,7 @@
         let nx = lastx + (e.pageX - lastmx);
         let ny = lasty + (e.pageY - lastmy);
         [nx, ny] = snap(awin, nx, ny);
-        console.log(nx, ny);
+        // console.log(nx, ny);
         // if (awin.data("fixed_aspect")) {
           // nx = Math.round(nx / 20) * 20;
           // ny = Math.round(ny / 20) * 20;
