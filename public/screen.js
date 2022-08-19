@@ -291,8 +291,8 @@
     saveWindows();
   }
   function snap(self, x, y) {
-    const gap = 12;
-    const sna = 8; // snap range
+    const gap = 10;
+    const sna = 5; // snap range
 
     let ox = x, oy = y;
     let mx = sna, my = sna;
@@ -301,7 +301,7 @@
     const h = parseInt(self.css("height"));
 
     $(".mywindow").each(function() {
-      if ($(this).is(self)) return true;
+      if ($(this).is(self) || $(this).attr("id") == "template") return true;
       const nx = parseInt($(this).css("left"));
       const ny = parseInt($(this).css("top"));
       const nw = parseInt($(this).css("width"));
@@ -311,11 +311,13 @@
       cx.push(nx - w - gap);
       cx.push(nx + nw);
       cx.push(nx + nw + gap);
+      cx.push(nx + nw - w);
       cy.push(ny);
       cy.push(ny - h);
       cy.push(ny - h - gap);
       cy.push(ny + nh);
       cy.push(ny + nh + gap);
+      cy.push(ny + nh - h);
     });
     for (let i in cx) {
       const dx = Math.abs(cx[i] - x);
@@ -327,6 +329,46 @@
       if (dy < my) {
         my = dy;
         oy = cy[i];
+      }
+    }
+    return [ox, oy];
+  }
+  function snapwh(self, w, h) {
+    const gap = 10;
+    const sna = 5; // snap range
+
+    let ox = w, oy = h;
+    let mx = sna, my = sna;
+    let cx = [self.data("nw")], cy = [self.data("nh") + 20];
+    const x = parseInt(self.css("left"));
+    const y = parseInt(self.css("top"));
+
+    $(".mywindow").each(function() {
+      if ($(this).is(self) || $(this).attr("id") == "template") return true;
+      const nx = parseInt($(this).css("left"));
+      const ny = parseInt($(this).css("top"));
+      const nw = parseInt($(this).css("width"));
+      const nh = parseInt($(this).css("height"));
+      // console.log($(this).find(".title").text(), nx, ny, nw, nh);
+      cx.push(nx - x);
+      cx.push(nx - x - gap);
+      cx.push(nx - x + nw);
+      cy.push(ny - y);
+      cy.push(ny - y - gap);
+      cy.push(ny - y + nh);
+    });
+    for (let i in cx) {
+      const dx = Math.abs(cx[i] - w);
+      const dy = Math.abs(cy[i] - h);
+      if (dx < mx) {
+        mx = dx;
+        ox = cx[i];
+        oy = Math.round(ox * self.data("nh") / self.data("nw")) + 20;
+      }
+      if (dy < my) {
+        my = dy;
+        oy = cy[i];
+        ox = Math.round((oy - 20) * self.data("nw") / self.data("nh"))
       }
     }
     return [ox, oy];
@@ -412,29 +454,30 @@
         const MINH = 40;
         if (awin.data("fixed_aspect")) {
           if (lpx == 'e' && lastw + (e.pageX - lastmx) >= MINW) {
-            awin.css("width", lastw + (e.pageX - lastmx));
-            awin.css("height", awin.width() * awin.data("nh") / awin.data("nw") + 20);
+            awin.css("width", parseInt(lastw + (e.pageX - lastmx)));
+            awin.css("height", parseInt(awin.width() * awin.data("nh") / awin.data("nw") + 20));
           } else if (lpy == 's' && lasth + (e.pageY - lastmy) >= MINH) {
-            awin.css("height", lasth + (e.pageY - lastmy));
-            awin.css("width", (awin.height() - 20) * awin.data("nw") / awin.data("nh"));
+            awin.css("height", parseInt(lasth + (e.pageY - lastmy)));
+            awin.css("width", parseInt((awin.height() - 20) * awin.data("nw") / awin.data("nh")));
           }
-          if (discrete) {
-            awin.css("width", Math.round((awin.width() - awin.data("nw")) / 30) * 30 + awin.data("nw") );
-            awin.css("height", awin.width() * awin.data("nh") / awin.data("nw") + 20);
-          }
+          // if (discrete) {
+          const [nw, nh] = snapwh(awin, parseInt(awin.css("width")), parseInt(awin.css("height")));
+          awin.css("width", nw);
+          awin.css("height", nh);
+          // }
 
         } else {
           if (lpx == 'w' && lastw + lastmx - e.pageX >= MINW) {
-            awin.css("width", lastw + (lastmx - e.pageX));
-            awin.css("left", lastx + (e.pageX - lastmx));
+            awin.css("width", parseInt(lastw + (lastmx - e.pageX)));
+            awin.css("left", parseInt(lastx + (e.pageX - lastmx)));
           } else if (lpx == 'e' && lastw + (e.pageX - lastmx) >= MINW) {
-            awin.css("width", lastw + (e.pageX - lastmx));
+            awin.css("width", parseInt(lastw + (e.pageX - lastmx)));
           }
           if (lpy == 'n' && lasth + (lastmy - e.pageY) >= MINH) {
-            awin.css("height", lasth + (lastmy - e.pageY));
-            awin.css("top", lasty + (e.pageY - lastmy));
+            awin.css("height", parseInt(lasth + (lastmy - e.pageY)));
+            awin.css("top", parseInt(lasty + (e.pageY - lastmy)));
           } else if (lpy == 's' && lasth + (e.pageY - lastmy) >= MINH) {
-            awin.css("height", lasth + (e.pageY - lastmy));
+            awin.css("height", parseInt(lasth + (e.pageY - lastmy)));
           }
         }
       } else if (action == "slide") {
