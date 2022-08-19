@@ -25,16 +25,14 @@
     // }
     $(".mywindow").each(function(k ,v) {
       if ($(v).attr('id') != "template") {
-        const of = $(v).offset(); 
         o = {
-          "x": of.left, 
-          "y": of.top, 
+          "x": $(v).css("left"), 
+          "y": $(v).css("top"), 
           "z-index": $(v).css("z-index"),
-          "w": $(v).width(), 
-          "h": $(v).height(),
+          "w": $(v).css("width"), 
+          "h": $(v).css("height"),
           "path": $(v).data("path"),
-          "min": false,
-          "max": false,
+          "min": $(v).css("visibility") == "hidden",
         };
         if ($(v).find(".slider").length) {
           o["slide"] = $(v).find(".finder_left").css("flex-basis");
@@ -42,6 +40,8 @@
         data.push(o);
       }
     });
+    // console.log("log", data[0].x, data[1].x);
+    // console.log("log", data[0].x, data[1].x);
     $.ajax({
       url: '/save_window',
       type: "POST",
@@ -106,6 +106,15 @@
     nwin.css("left", opts["x"]);
     nwin.css("top", opts["y"]);
 
+    console.log("POS", opts["w"], opts["h"]);
+
+    function finishedLoading(nwin) {
+      nwin.show();
+      if (opts["min"]) {
+        nwin.find(".button_min").click();
+      } 
+    }
+
     if (opts["type"] == "image") {
       var image = new Image();
       image.onload = function() {
@@ -114,9 +123,18 @@
         nwin.data("nw", this.naturalWidth);
         nwin.data("nh", this.naturalHeight);
 
-        nwin.css("width", (opts["w"] || nwin.data("nw")) + "px");
-        nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
-        nwin.show();
+        if (opts["w"] === undefined)
+          nwin.css("width", nwin.data("nw") + "px");
+        else
+          nwin.css("width", opts["w"]);
+
+        if (opts["h"] === undefined)
+          nwin.css("height", (nwin.data("nh") + 20) + "px");
+        else
+          nwin.css("height", opts["h"]);
+//         nwin.css("width", (opts["w"] || (nwin.data("nw") + "px");
+//         nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
+        finishedLoading(nwin);
       }
       image.src = "/" + opts["path"];
       nwin.find(".content").append(image);
@@ -130,9 +148,6 @@
           nwin.find(".finder_left").css("flex-basis", data["slide"])
           nwin.find(".panel").css("height", "calc(100% - 50px)");
           nwin.find(".content").css("user-select", "none");
-          nwin.show();
-          if (save_windows)
-            saveWindows();
           nwin.find(".apathbar").click(function(e) {
             console.log("pathbar", $(this).attr("href"));
             updateFinder($(this).attr("href"), true);
@@ -160,10 +175,22 @@
             action = "slide";
             e.stopImmediatePropagation();
           });
+          finishedLoading(nwin);
+          if (save_windows)
+            saveWindows();
         });
       }
-      nwin.css("width", (opts["w"] || 500) + "px");
-      nwin.css("height", (opts["h"] || 500) + 20 + "px");
+      if (opts["w"] === undefined)
+        nwin.css("width", "500px");
+      else
+        nwin.css("width", opts["w"]);
+
+      if (opts["h"] === undefined)
+        nwin.css("height", "520px");
+      else
+        nwin.css("height", opts["h"]);
+      // nwin.css("width", (opts["w"] || 500) + "px");
+      // nwin.css("height", (opts["h"] || 500) + 20 + "px");
 
       // nwin.find(".finder_left").css("flex-basis", (opts["slide"] || 200) + "px");
       updateFinder(nwin.data("path"));
@@ -220,6 +247,49 @@
     return [px, py, relX, relY];
   }
 
+  function findEmptyXYMin() {
+    const ww = $(window).width();
+    for (let y = 20; 1; y+= 25) {
+      for (let x = 0; x < ww; x+=200) {
+        let conflict = 0;
+        $(".window_min").each(function() {
+          if (Math.abs($(this).offset().left - x) < 5 && Math.abs(parseInt($(this).css("bottom")) - y) < 5) {
+            conflict = 1;
+            return false;
+          }
+        });
+        if (!conflict)
+          return [x, y];
+      }
+    }
+    return [0, 0];
+  }
+  function createMinWindow(win) {
+    // if (win.css("visibility") == "hidden")
+      // return;
+    let nwin = $("#template_min").clone().removeAttr('id');
+    nwin.find(".title").html(win.find(".title").html());
+    nwin.css("width", "200px");
+    let [ex, ey] = findEmptyXYMin();
+    nwin.css("left", ex + "px");
+    nwin.css("bottom", ey + "px");
+
+    $("#template_min").after(nwin);
+    nwin.show();
+    win.css("visibility", "hidden");
+
+    nwin.click(function() {
+      nwin.remove();
+      win.css("visibility", "visible");
+      saveWindows();
+    });
+    nwin.find(".button_close").click(function() {
+      nwin.remove();
+      win.remove();
+      saveWindows();
+    });
+    saveWindows();
+  }
   function refresh() {
     $(".mywindow").mousedown(function(e) {
       [lpx, lpy, relX, relY] = IsOnBorder(e, this);
@@ -245,6 +315,15 @@
     $(document).mouseup(function(e) {
       action = 0;
     });
+    $(".mywindow .button_max").click(function() {
+      alert("from win");
+    });
+
+    // console.log("e registered");
+    $(".button_min").off('click').click(function() {
+      createMinWindow($(this).closest(".mywindow"));
+      // $(this).closest(".mywindow").hide();
+    });
     $(".button_close").click(function() {
       $(this).closest(".mywindow").remove();
       saveWindows();
@@ -269,7 +348,7 @@
       else
         $(this).css("cursor", "nwse-resize");
     });
-    $(document).mousemove(function(e) {
+    $(document).off('mousemove').mousemove(function(e) {
       const discrete = 1;
       if (action == "move") {
         let nx = lastx + (e.pageX - lastmx);
@@ -338,7 +417,6 @@
         console.log("total windows", data.responseJSON.length);
         console.log(data.responseJSON);
         data.responseJSON.forEach((w) => {
-          w["h"] -= 20;
           createWindow(w);
         });
         refresh();

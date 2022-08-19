@@ -102,6 +102,7 @@ app.use('/load_windows', async(req, res) => {
   if (fs.existsSync(path)) {
     let rawdata = fs.readFileSync(path);
     json = JSON.parse(rawdata);
+    console.log(json);
     res.send(json);
     res.end();
   }
