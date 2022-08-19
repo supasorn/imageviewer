@@ -290,6 +290,47 @@
     });
     saveWindows();
   }
+  function snap(self, x, y) {
+    const gap = 12;
+    const sna = 8; // snap range
+
+    let ox = x, oy = y;
+    let mx = sna, my = sna;
+    let cx = [], cy = [];
+    const w = parseInt(self.css("width"));
+    const h = parseInt(self.css("height"));
+
+    $(".mywindow").each(function() {
+      if ($(this).is(self)) return true;
+      const nx = parseInt($(this).css("left"));
+      const ny = parseInt($(this).css("top"));
+      const nw = parseInt($(this).css("width"));
+      const nh = parseInt($(this).css("height"));
+      cx.push(nx);
+      cx.push(nx - w);
+      cx.push(nx - w - gap);
+      cx.push(nx + nw);
+      cx.push(nx + nw + gap);
+      cy.push(ny);
+      cy.push(ny - h);
+      cy.push(ny - h - gap);
+      cy.push(ny + nh);
+      cy.push(ny + nh + gap);
+    });
+    for (let i in cx) {
+      const dx = Math.abs(cx[i] - x);
+      const dy = Math.abs(cy[i] - y);
+      if (dx < mx) {
+        mx = dx;
+        ox = cx[i];
+      }
+      if (dy < my) {
+        my = dy;
+        oy = cy[i];
+      }
+    }
+    return [ox, oy];
+  }
   function refresh() {
     $(".mywindow").mousedown(function(e) {
       [lpx, lpy, relX, relY] = IsOnBorder(e, this);
@@ -353,10 +394,12 @@
       if (action == "move") {
         let nx = lastx + (e.pageX - lastmx);
         let ny = lasty + (e.pageY - lastmy);
-        if (awin.data("fixed_aspect")) {
-          nx = Math.round(nx / 20) * 20;
-          ny = Math.round(ny / 20) * 20;
-        }
+        [nx, ny] = snap(awin, nx, ny);
+        console.log(nx, ny);
+        // if (awin.data("fixed_aspect")) {
+          // nx = Math.round(nx / 20) * 20;
+          // ny = Math.round(ny / 20) * 20;
+        // }
         awin.css({
           "left": nx,
           "top": ny 
