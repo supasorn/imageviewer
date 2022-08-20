@@ -290,10 +290,17 @@
     });
     saveWindows();
   }
+  function getDim(jdom) {
+    return {
+      "x": parseInt(jdom.css("left")),
+      "y": parseInt(jdom.css("top")),
+      "w": parseInt(jdom.css("width")),
+      "h": parseInt(jdom.css("height"))
+    };
+  }
+  const gap = 10;
+  const sna = 4; // snap range
   function snap(self, x, y) {
-    const gap = 10;
-    const sna = 5; // snap range
-
     let ox = x, oy = y;
     let mx = sna, my = sna;
     let cx = [], cy = [];
@@ -302,22 +309,19 @@
 
     $(".mywindow").each(function() {
       if ($(this).is(self) || $(this).attr("id") == "template") return true;
-      const nx = parseInt($(this).css("left"));
-      const ny = parseInt($(this).css("top"));
-      const nw = parseInt($(this).css("width"));
-      const nh = parseInt($(this).css("height"));
-      cx.push(nx);
-      cx.push(nx - w);
-      cx.push(nx - w - gap);
-      cx.push(nx + nw);
-      cx.push(nx + nw + gap);
-      cx.push(nx + nw - w);
-      cy.push(ny);
-      cy.push(ny - h);
-      cy.push(ny - h - gap);
-      cy.push(ny + nh);
-      cy.push(ny + nh + gap);
-      cy.push(ny + nh - h);
+      const win = getDim($(this));
+      cx.push(win.x);
+      cx.push(win.x - w);
+      cx.push(win.x - w - gap);
+      cx.push(win.x + win.w);
+      cx.push(win.x + win.w + gap);
+      cx.push(win.x + win.w - w);
+      cy.push(win.y);
+      cy.push(win.y - h);
+      cy.push(win.y - h - gap);
+      cy.push(win.y + win.h);
+      cy.push(win.y + win.h + gap);
+      cy.push(win.y + win.h - h);
     });
     for (let i in cx) {
       const dx = Math.abs(cx[i] - x);
@@ -334,9 +338,6 @@
     return [ox, oy];
   }
   function snapwh(self, w, h) {
-    const gap = 10;
-    const sna = 5; // snap range
-
     let ox = w, oy = h;
     let mx = sna, my = sna;
     let cx = [self.data("nw")], cy = [self.data("nh") + 20];
@@ -345,17 +346,13 @@
 
     $(".mywindow").each(function() {
       if ($(this).is(self) || $(this).attr("id") == "template") return true;
-      const nx = parseInt($(this).css("left"));
-      const ny = parseInt($(this).css("top"));
-      const nw = parseInt($(this).css("width"));
-      const nh = parseInt($(this).css("height"));
-      // console.log($(this).find(".title").text(), nx, ny, nw, nh);
-      cx.push(nx - x);
-      cx.push(nx - x - gap);
-      cx.push(nx - x + nw);
-      cy.push(ny - y);
-      cy.push(ny - y - gap);
-      cy.push(ny - y + nh);
+      const win = getDim($(this));
+      cx.push(win.x - x);
+      cx.push(win.x - x - gap);
+      cx.push(win.x - x + win.w);
+      cy.push(win.y - y);
+      cy.push(win.y - y - gap);
+      cy.push(win.y - y + win.h);
     });
     for (let i in cx) {
       const dx = Math.abs(cx[i] - w);

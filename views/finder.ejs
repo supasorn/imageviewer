@@ -1,5 +1,6 @@
 <div class="finder_header">
   <div class="finder_pathbar">
+    <a href="/" class="apathbar"><i class="fa-solid fa-house-chimney"></i></a>
   <% let count = 0; %>
   <% for (let i = 0; i < path.length; i++) { %>
     <% if (path[i].length == 0) continue; %> 
@@ -21,7 +22,7 @@
 <div class="panelContainer">
   <div class="finder_left panel">
     <ul class="fa-ul">
-      <li><span class="fa-li"><i class="fa-regular fa-folder"></i></span><a href='#' class="finder_folder">../</a></li>
+      <li><span class="fa-li"><i class="fa-solid fa-folder-closed"></i></span><a href='#' class="finder_folder">../</a></li>
       <% for (let f of list) { %>
       <li>
         <% if (f.at(-1) == '/') { %>
@@ -54,6 +55,9 @@
         </div>
         </a>
       </div>
+    <% } %>
+    <% if (rawimglist.length == 0) { %>
+    <span class="noimage">This folder contains no images</span>
     <% } %>
   </div>
 </div>
