@@ -213,7 +213,7 @@ app.use('/browse', async(req, res) => {
 });
 
 
-app.use('/', (req, res) => { res.redirect('/byowse'); });
+app.use('/', (req, res) => { res.redirect('/browse'); });
 
 app.listen(1234)
 
