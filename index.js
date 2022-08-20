@@ -5,15 +5,18 @@ const express = require('express');
 const process = require('process');
 const globp = require('glob-promise')
 const fs = require('fs');
-const imagesize = require('image-size');
+// const imagesize = require('image-size');
 const bodyParser = require('body-parser');
 
+
 let root='/home/supasorn/neodpm/';
+if (process.argv.length > 2) {
+  root = process.argv[2];
+  if (root.at(-1) != '/')
+    root += '/';
+}
 var resq = [];
 
-if (process.argv.length == 3) {
-  root = process.argv[2]
-}
 console.log("set root=", root);
 // open livereload high port and start to watch public directory for changes
 const liveReloadServer = livereload.createServer();
