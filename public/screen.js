@@ -408,7 +408,7 @@ function refresh() {
     $(this).css("z-index", topZIndex() + 1);
     awin = $(this);
     if (lpx == "" && lpy == "") {
-      if ($(this).data("state") =="" && ($(this).data("type") != "finder" || relY < 20))
+      if ($(this).data("state") != "max" && ($(this).data("type") != "finder" || relY < 20))
         action = "move";
     } else {
       action = "resize";
@@ -447,6 +447,7 @@ function refresh() {
     if (win.data("state") == "max")
       unmaximize(win);
 
+    console.log("shot");
     createMinWindow($(this).closest(".mywindow"));
   });
   $(".button_max").off('click').click(function() {
