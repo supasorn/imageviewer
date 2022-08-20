@@ -114,7 +114,7 @@ app.use('/finder/', async(req, res) => {
   if (urlpath[urlpath.length - 1] != '/')
     urlpath = urlpath + '/';
 
-  console.log("finder: ", urlpath, "slider", req.query.slide);
+  console.log("finder: ", urlpath);
   // console.log(path.join(root, urlpath, '/*/'));
 
   const sdir = await globp(`${root}/${urlpath}/*/`);
@@ -131,7 +131,7 @@ app.use('/finder/', async(req, res) => {
      path: urlpath.split("/"),
      rawimglist
     }, (err, html) => {
-    res.status(200).send({html, "path": urlpath, "slide": req.query.slide});
+    res.status(200).send({html, "path": urlpath});
   });
 });
 

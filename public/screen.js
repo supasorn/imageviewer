@@ -38,6 +38,9 @@ function saveWindows() {
       if ($(v).find(".slider").length) {
         o["slide"] = $(v).find(".finder_left").css("flex-basis");
       }
+      if ($(v).find(".zoom_ball").length) {
+        o["zoom"] = $(v).find(".zoom_ball").css("left");
+      }
       data.push(o);
     }
   });
@@ -83,12 +86,36 @@ function topZIndex() {
   return mx;
 }
 
+function updateZoom(zoomball, newx) {
+  newx = parseInt(newx); 
+  console.log("updateZoom()", zoomball, newx);
+  const TICKS = 105;
+  if (newx < 0) newx = 0;
+  if (newx > TICKS) newx = TICKS;
+  zoomball.css("left", newx + "px");
+
+  const t = newx / TICKS;
+  const ns = 32 * (1-t) + 512 * t;
+
+  let objs = zoomball.closest(".mywindow").find(".flex-container img, .flex-container video");
+  objs.css("width", ns + "px");
+  objs.css("height", ns + "px");
+
+  objs = zoomball.closest(".mywindow").find(".finder_label");
+  objs.css("width", ns + "px");
+}
+
+function colorizePath(path) {
+  const s = path.split("/");
+  // console.log();
+  return "<span class='unfocused'>" + s.slice(0, -1).join("/") + "/</span>" + s.at(-1);
+}
 function createWindow(opts) {
   let nwin = $("#template").clone().removeAttr('id');
   $("#template").after(nwin);
 
   nwin.data("path", opts["path"]);
-  nwin.find(".title").html(opts["path"]);
+  nwin.find(".title").html(colorizePath(opts["path"]));
 
   let ext = opts["path"].split(".");
   if (ext.length == 1) {
@@ -141,12 +168,15 @@ function createWindow(opts) {
     nwin.find(".content").append(image);
   } else if (opts["type"] == "finder") {
     function updateFinder(path, save_windows=false) {
-      console.log("fetch " + path + "," + (nwin.find(".finder_left").css("flex-basis") || opts["slide"]));
-      $.get("/finder" + path, {"slide": nwin.find(".finder_left").css("flex-basis") || opts["slide"]}, function(data, status) {
+      const slide_value = nwin.find(".finder_left").css("flex-basis") || opts["slide"];
+      const zoom_value = nwin.find(".zoom_ball").css("left") || opts["zoom"];
+      console.log("fetch " + path + ", " + slide_value + ", " + zoom_value);
+      $.get("/finder" + path, function(data, status) {
         nwin.data("path", data["path"]);
         nwin.find(".title").text("Finder");
         nwin.find(".content").html(data["html"]);
-        nwin.find(".finder_left").css("flex-basis", data["slide"])
+        nwin.find(".finder_left").css("flex-basis", slide_value);
+        updateZoom(nwin.find(".zoom_ball"), zoom_value);
         nwin.find(".panel").css("height", "calc(100% - 50px)");
         nwin.find(".content").css("user-select", "none");
         nwin.find(".apathbar").click(function(e) {
@@ -167,6 +197,18 @@ function createWindow(opts) {
           createWindowFromImage($(this).attr("href"));
           refresh();
           e.preventDefault();
+        });
+        nwin.find(".finder_label").click(function(e) {
+          alert("in");
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        });
+        nwin.find(".zoom_ball").mousedown(function(e) {
+          awin = $(this);
+          lastmx = e.pageX;
+          lastx = parseInt($(this).css("left"));
+          action = "zoom";
+          e.stopImmediatePropagation();
         });
 
         $(".slider").mousedown(function(e) {
@@ -395,6 +437,7 @@ function snapwh(self, w, h) {
   }
   return [ox, oy];
 }
+
 function refresh() {
   $(".mywindow").mousedown(function(e) {
     [lpx, lpy, relX, relY] = IsOnBorder(e, this);
@@ -538,13 +581,16 @@ function refresh() {
         }
       }
     } else if (action == "slide") {
-      let neww = lastx + (e.pageX - lastmx);
+      let neww = parseInt(lastx + (e.pageX - lastmx));
       let mw = awin.closest(".mywindow").width();
       if (neww > mw - 10)
         neww = mw - 10; 
       if (neww < 0)
         neww = 0;
       awin.prev().css("flex-basis", neww + "px");
+    } else if (action == "zoom") {
+      let newx = parseInt(lastx + (e.pageX - lastmx));
+      updateZoom(awin, newx);
     }
     if (action != 0) {
       saveWindowTimer();

@@ -31,8 +31,8 @@ body {
 }
 .mywindow {
   position: absolute;
-  width: 100;
-  height: 200;
+  width: 100px;
+  height: 100px;
   background-color: #CCCCCC;
   border-radius: 6px 6px 0px 0px;
   display: none;
@@ -55,6 +55,10 @@ body {
   display: none;
   overflow: hidden;
 }
+.window_min .title {
+  cursor: pointer;
+}
+
 .header {
   width: 100%;
   height: 20px;
@@ -67,8 +71,15 @@ body {
   color: white;
   user-select: none;
   display: inline-block;
+  overflow: hidden;
+  width: calc(100% - 65px);
+  direction: rtl;
+  text-align: left;
 }
 
+.unfocused {
+  color: #a9beeb;
+}
 .buttons {
   background-color: #3558a4;
   cursor: pointer;
@@ -111,9 +122,18 @@ ul {
   user-select: none;
   background-color: #EEEEEE;
 }
+.finder_header {
+  background-color: #cccccc;
+}
 .finder_pathbar {
   padding: 5px;
-    background-color: #cccccc;
+  display: inline-block;
+}
+.finder_zoombar {
+  display: inline-block;
+  float: right;
+  position: absolute;
+  right: 0px;
 }
 .apathbar {
 }
@@ -153,9 +173,6 @@ ul {
 }
 
 .flex-container img, video {
-  /* width: 200px; */
-  /* max-width: 200px; */
-  /* max-height: 200px; */
   object-fit: contain;
   width: 200px;
   height: 200px;
@@ -171,8 +188,8 @@ ul {
   background-color: #EEEEEE;
 }
 .finder_image {
-  height: 200px;
-  width: 200px;
+  /* width: 200px; */
+  /* height: 200px; */
   padding: 2px;
   border-radius: 2px;
   text-align: center;
@@ -181,7 +198,6 @@ ul {
   justify-content: center;
 }
 .finder_label {
-  width: 200px;
   padding: 2px;
   font-size: 12px;
   word-break: break-all;
@@ -218,6 +234,40 @@ a:hover {
 }
 #app_finder_open {
   cursor: pointer;
+}
+
+.button_zoom {
+  /* background-color: white; */ 
+  border: 2px solid #555555;
+  color: black;
+  padding: 0px 2px;
+  width: 18px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 2px 2px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.zoom_area {
+  border-radius: 4px;
+  width: 120px;
+  height: 7px;
+  background-color: #AAAAAA;
+  margin-top: 10px;
+  margin-right: 10px;
+}
+.zoom_ball {
+  width: 15px;
+  height: 15px;
+  background-color: #3558a4;
+  border-radius: 10px;
+  position: absolute;
+  top: 6px;
+  left: 37px;
+  cursor: ew-resize;
+
 }
 </style>
 
