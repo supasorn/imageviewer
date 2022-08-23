@@ -97,12 +97,23 @@ function updateZoom(zoomball, newx) {
   const t = newx / TICKS;
   const ns = 32 * (1-t) + 512 * t;
 
-  let objs = zoomball.closest(".mywindow").find(".flex-container img, .flex-container video");
+  let mwin = zoomball.closest(".mywindow");
+  let objs = mwin.find(".flex-container img, .flex-container video");
   objs.css("width", ns + "px");
   objs.css("height", ns + "px");
 
-  objs = zoomball.closest(".mywindow").find(".finder_label");
+  objs = mwin.find(".finder_label");
   objs.css("width", ns + "px");
+
+  objs = mwin.find(".finder_image");
+  objs.css("width", ns + "px");
+  objs.css("height", ns + "px");
+
+  objs = mwin.find(".folder_icon");
+  objs.css("font-size", (ns * 0.8) + "px");
+
+  objs = mwin.find(".file_icon");
+  objs.css("font-size", (ns * 0.6) + "px");
 }
 
 function colorizePath(path) {
@@ -146,22 +157,26 @@ function createWindow(opts) {
   if (opts["type"] == "image") {
     var image = new Image();
     image.onload = function() {
+      console.log("optsw", opts["w"]);
       this.setAttribute("class", "imgcontent");
       this.setAttribute("draggable", "false");
       nwin.data("nw", this.naturalWidth);
       nwin.data("nh", this.naturalHeight);
 
-      if (opts["w"] === undefined)
-        nwin.css("width", nwin.data("nw") + "px");
-      else
-        nwin.css("width", opts["w"]);
+      if (!nwin.data("imageloaded")) {
+        if (opts["w"] === undefined)
+          nwin.css("width", nwin.data("nw") + "px");
+        else
+          nwin.css("width", opts["w"]);
 
-      if (opts["h"] === undefined)
-        nwin.css("height", (nwin.data("nh") + 20) + "px");
-      else
-        nwin.css("height", opts["h"]);
+        if (opts["h"] === undefined)
+          nwin.css("height", (nwin.data("nh") + 20) + "px");
+        else
+          nwin.css("height", opts["h"]);
+      }
 //         nwin.css("width", (opts["w"] || (nwin.data("nw") + "px");
 //         nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
+      nwin.data("imageloaded", true);
       finishedLoading(nwin);
     }
     image.src = "/" + opts["path"];
@@ -274,7 +289,7 @@ function IsOnBorder(e, element) {
   var relX = e.pageX - offset.left;
   var relY = e.pageY - offset.top; 
 
-  const SIZE = 7;
+  const SIZE = 10;
   let px = "", py = "";
   if (relX < SIZE && !$(element).data("fixed_aspect")) 
     px = "w";

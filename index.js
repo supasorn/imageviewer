@@ -127,7 +127,8 @@ app.use('/finder/', async(req, res) => {
 
   const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.mp4)`, {nodir: true});
   const s = sdir.concat(smedia, sfile);
-  let rawimglist = smedia.map(x => ({fullpath: x.replace(root, ""), basename: path.basename(x)}));
+  // let rawimglist = smedia.map(x => ({fullpath: x.replace(root, ""), basename: path.basename(x)}));
+  let rawimglist = s.map(x => ({fullpath: x.replace(root, ""), basename: path.basename(x)}));
 
   res.render('finder', 
     {list: s.map (x => x.replace(path.join(root, urlpath), "")),
@@ -138,7 +139,8 @@ app.use('/finder/', async(req, res) => {
   });
 });
 
-app.use('/directory/', async(req, res) => {
+// unused
+app.use('/directory/', async(req, res) => { 
   let urlpath = req.path;
   if (urlpath[urlpath.length - 1] != '/')
     urlpath = urlpath + '/';

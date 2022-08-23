@@ -50,8 +50,16 @@
         <div class="finder_image">
           <% if (img.basename.endsWith(".mp4")) { %>
           <video loop src='/<%= img.fullpath %>' autoplay muted></video>
-          <% } else { %>
+          <% } else if (img.basename.endsWith(".png") || img.basename.endsWith(".jpg")) { %>
           <img src='/<%= img.fullpath %>' loading="lazy">
+          <% } else if (img.fullpath.endsWith("/")) { %>
+          <div class="folder_icon" style="font-size: 100px">
+            <i class="fa-solid fa-folder"></i>
+          </div>
+          <% } else { %>
+          <div class="file_icon" style="font-size: 100px">
+            <i class="fa-regular fa-file"></i>
+          </div>
           <% } %>
         </div>
         <div class="finder_label">
