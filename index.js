@@ -5,6 +5,7 @@ const express = require('express');
 const process = require('process');
 const globp = require('glob-promise')
 const fs = require('fs');
+const os = require('os');
 // const imagesize = require('image-size');
 const bodyParser = require('body-parser');
 
@@ -20,7 +21,7 @@ var resq = [];
 console.log("set root=", root);
 // open livereload high port and start to watch public directory for changes
 const liveReloadServer = livereload.createServer();
-liveReloadServer.watch(root);
+liveReloadServer.watch([root, os.homedir()]);
 // ping browser on Express boot, once browser has reconnected and handshaken
 liveReloadServer.server.once("connection", () => {
   setTimeout(() => {
@@ -37,6 +38,7 @@ app.use(connectLivereload());
 app.set('view engine', 'ejs');
 app.use(express.static(root));
 app.use('/static', express.static(path.join(__dirname, 'public')))
+app.use('/imshow', express.static(path.join(os.homedir(), 'tmp_imshow')))
 
 function getLRScript() {
   return `<script>

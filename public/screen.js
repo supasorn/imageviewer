@@ -122,6 +122,7 @@ function colorizePath(path) {
   return "<span class='unfocused'>" + s.slice(0, -1).join("/") + "/</span>" + s.at(-1);
 }
 function createWindow(opts) {
+  console.log("CreateWindow", opts["path"]);
   let nwin = $("#template").clone().removeAttr('id');
   $("#template").after(nwin);
 
@@ -209,12 +210,19 @@ function createWindow(opts) {
           e.preventDefault();
         });
         nwin.find(".aopen").click(function(e) {
-          createWindowFromImage($(this).attr("href"));
-          refresh();
+          if ($(this).find(".folder_icon").length) {
+            console.log("YES", $(this).find(".finder_label").text().trim());
+            updateFinder(nwin.data("path") + $(this).find(".finder_label").text().trim(), true);
+          } else if ($(this).find(".file_icon").length) {
+            console.log("not implemented");
+          } else {
+            createWindowFromImage($(this).attr("href"));
+            refresh();
+          }
           e.preventDefault();
         });
         nwin.find(".finder_label").click(function(e) {
-          alert("in");
+          // alert("in");
           e.stopImmediatePropagation();
           e.preventDefault();
         });
@@ -262,7 +270,7 @@ function createWindowFromImage(imagepath) {
   createWindow({"path": imagepath, "fixed_aspect": true});
 }
 
-/*
+
 async function subscribe() {
   let response = await fetch("/subscribe?rand="+Math.random());
 
@@ -275,14 +283,15 @@ async function subscribe() {
   } else {
     let message = await response.text();
     let json = JSON.parse(message);
-    showMessage(json);
+    // showMessage(json);
+    console.log("DONE");
+    console.log(json);
     // createWindow(json);
-    createWindowFromImage(json["path"]);
+    createWindowFromImage(json["path"] + "?" + json["id"]);
     refresh();
     await subscribe();
   }
 }
-*/
 
 function IsOnBorder(e, element) {
   var offset = $(element).offset(); 
@@ -631,7 +640,7 @@ $(function() {
     refresh();
   });
 
-  // subscribe();
+  subscribe();
   refresh();
 
 });
