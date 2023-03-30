@@ -10,8 +10,8 @@ const os = require('os');
 const bodyParser = require('body-parser');
 
 
-// let root='/home/supasorn/neodpm/';
-let root='/data/pakkapon/eg3d-main/eg3d/';
+let root='/home/supasorn/neodpm/';
+// let root='/data/pakkapon/eg3d-main/eg3d/';
 if (process.argv.length > 2) {
   root = process.argv[2];
   if (root.at(-1) != '/')
