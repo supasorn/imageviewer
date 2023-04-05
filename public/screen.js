@@ -122,7 +122,7 @@ function colorizePath(path) {
   return "<span class='unfocused'>" + s.slice(0, -1).join("/") + "/</span>" + s.at(-1);
 }
 function createWindow(opts) {
-  console.log("CreateWindow", opts["path"]);
+  console.log("Create Window", opts["path"]);
   let nwin = $("#template").clone().removeAttr('id');
   $("#template").after(nwin);
 
@@ -130,15 +130,20 @@ function createWindow(opts) {
   nwin.find(".title").html(colorizePath(opts["path"]));
 
   let ext = opts["path"].split(".");
+
   if (ext.length == 1) {
     opts["type"] = "finder"
     nwin.data("type", "finder");
     nwin.data("fixed_aspect", false);
-  } else if (ext[1] == "png") {
+  } else if (ext[ext.length - 1] == "png") {
     opts["type"] = "image"
     nwin.data("type", "image");
     nwin.data("fixed_aspect", true);
-  }
+  } else if (ext[ext.length - 1] == "mp4") {
+    opts["type"] = "video"
+    nwin.data("type", "video");
+    nwin.data("fixed_aspect", true);
+  } 
 
   if (opts["x"] === undefined || opts["y"] == undefined) {
     [opts["x"], opts["y"]] = findEmptyXY();
@@ -164,7 +169,7 @@ function createWindow(opts) {
       nwin.data("nw", this.naturalWidth);
       nwin.data("nh", this.naturalHeight);
 
-      if (!nwin.data("imageloaded")) {
+      if (!nwin.data("loaded")) {
         if (opts["w"] === undefined)
           nwin.css("width", nwin.data("nw") + "px");
         else
@@ -177,11 +182,40 @@ function createWindow(opts) {
       }
 //         nwin.css("width", (opts["w"] || (nwin.data("nw") + "px");
 //         nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
-      nwin.data("imageloaded", true);
+      nwin.data("loaded", true);
       finishedLoading(nwin);
     }
     image.src = "/" + opts["path"];
     nwin.find(".content").append(image);
+  } else if (opts["type"] == "video") {
+    var video = document.createElement("video");
+    video.setAttribute("class", "imgcontent");
+    video.setAttribute("draggable", "false");
+    video.setAttribute("controls", "true");
+    video.setAttribute("autoplay", "true");
+    video.setAttribute("loop", "true");
+    video.setAttribute("muted", "true");
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("preload", "auto");
+    video.setAttribute("src", "/" + opts["path"]);
+    video.onloadeddata = function() {
+      nwin.data("nw", this.videoWidth);
+      nwin.data("nh", this.videoHeight);
+      if (!nwin.data("loaded")) {
+        if (opts["w"] === undefined)
+          nwin.css("width", nwin.data("nw") + "px");
+        else
+          nwin.css("width", opts["w"]);
+
+        if (opts["h"] === undefined)
+          nwin.css("height", (nwin.data("nh") + 20) + "px");
+        else
+          nwin.css("height", opts["h"]);
+      }
+      nwin.data("loaded", true);
+      finishedLoading(nwin);
+    }
+    nwin.find(".content").append(video);
   } else if (opts["type"] == "finder") {
     function updateFinder(path, save_windows=false) {
       const slide_value = nwin.find(".finder_left").css("flex-basis") || opts["slide"];
