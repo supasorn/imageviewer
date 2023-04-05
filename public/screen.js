@@ -257,6 +257,8 @@ function createWindow(opts) {
         });
         nwin.find(".finder_label").click(function(e) {
           // alert("in");
+          window.open("/live/" + $(this).closest("a.aopen").attr("href"));
+
           e.stopImmediatePropagation();
           e.preventDefault();
         });
@@ -281,7 +283,7 @@ function createWindow(opts) {
       });
     }
     if (opts["w"] === undefined)
-      opts["w"] = "800px";
+      opts["w"] = "1080px";
     if (opts["h"] === undefined)
       opts["h"] = "820px";
 
