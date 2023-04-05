@@ -27,6 +27,11 @@ $(document).ready(function(){
       "maxWidth":previewSize + "px",
       "width": previewSize + "px",
     });
+    $("video").css({
+      "maxHeight":previewSize + "px",
+      "maxWidth":previewSize + "px",
+      "width": previewSize + "px",
+    });
     $("#mainviewer").css('display', 'flex');
     $(".slider").show();
   }
