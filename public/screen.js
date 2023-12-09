@@ -135,7 +135,7 @@ function createWindow(opts) {
     opts["type"] = "finder"
     nwin.data("type", "finder");
     nwin.data("fixed_aspect", false);
-  } else if (ext[ext.length - 1] == "png") {
+  } else if (ext[ext.length - 1] == "png" || ext[ext.length - 1] == "jpg") {
     opts["type"] = "image"
     nwin.data("type", "image");
     nwin.data("fixed_aspect", true);
