@@ -135,7 +135,7 @@ function createWindow(opts) {
     opts["type"] = "finder"
     nwin.data("type", "finder");
     nwin.data("fixed_aspect", false);
-  } else if (ext[ext.length - 1] == "png" || ext[ext.length - 1] == "jpg") {
+  } else if (ext[ext.length - 1] == "png" || ext[ext.length - 1] == "jpg" || ext[ext.length - 1] == "JPG") {
     opts["type"] = "image"
     nwin.data("type", "image");
     nwin.data("fixed_aspect", true);
@@ -170,14 +170,20 @@ function createWindow(opts) {
       nwin.data("nh", this.naturalHeight);
 
       if (!nwin.data("loaded")) {
-        if (opts["w"] === undefined)
-          nwin.css("width", nwin.data("nw") + "px");
-        else
+        if (opts["w"] === undefined) {
+          let w = nwin.data("nw");
+          if (nwin.data("nw") > 800) 
+            w = 800;
+          nwin.css("width", w + "px");
+        } else
           nwin.css("width", opts["w"]);
 
-        if (opts["h"] === undefined)
-          nwin.css("height", (nwin.data("nh") + 20) + "px");
-        else
+        if (opts["h"] === undefined) {
+          let h = nwin.data("nh");
+          if (nwin.data("nw") > 800) 
+            h = nwin.data("nh") * 800 / nwin.data("nw");
+          nwin.css("height", (h + 20) + "px");
+        } else
           nwin.css("height", opts["h"]);
       }
 //         nwin.css("width", (opts["w"] || (nwin.data("nw") + "px");
@@ -244,6 +250,12 @@ function createWindow(opts) {
           e.preventDefault();
         });
         nwin.find(".aopen").click(function(e) {
+          // check if cmd key is pressed
+          if (e.metaKey) {
+            $.get("/rm", {"path": $(this).attr("href")});
+            e.preventDefault();
+            return;
+          }
           if ($(this).find(".folder_icon").length) {
             console.log("YES", $(this).find(".finder_label").text().trim());
             updateFinder(nwin.data("path") + $(this).find(".finder_label").text().trim(), true);
@@ -677,6 +689,11 @@ $(function() {
   });
 
   subscribe();
+  $(".fav_link").click(function(e) {
+    createWindow({"path": $(this).attr("href")});
+    refresh();
+    e.preventDefault();
+  });
   refresh();
 
 });

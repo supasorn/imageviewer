@@ -18,6 +18,9 @@
   <% } %>
 
   </div>
+  <div class="infotab">
+    <%= info %>
+  </div>
   <div class="finder_zoombar">
     <div class="zoom_area"></div>
     <div class="zoom_ball"></div>
@@ -31,7 +34,7 @@
       <li>
         <% if (f.at(-1) == '/') { %>
         <span class="fa-li"><i class="fa-regular fa-folder"></i></span>
-        <% } else if (["png", "jpg"].includes(f.split(".").pop())) { %>
+        <% } else if (["png", "jpg", "JPG"].includes(f.split(".").pop())) { %>
         <span class="fa-li"><i class="fa-regular fa-image"></i></span>
         <% } else if (["mp4"].includes(f.split(".").pop())) { %>
         <span class="fa-li"><i class="fa-regular fa-circle-play"></i></span>
@@ -50,7 +53,7 @@
         <div class="finder_image">
           <% if (img.basename.endsWith(".mp4")) { %>
           <video loop src='/<%= img.fullpath %>' autoplay muted></video>
-          <% } else if (img.basename.endsWith(".png") || img.basename.endsWith(".jpg")) { %>
+          <% } else if (img.basename.endsWith(".png") || img.basename.endsWith(".jpg") || img.basename.endsWith(".JPG")) { %>
           <img src='/<%= img.fullpath %>' loading="lazy">
           <% } else if (img.fullpath.endsWith("/")) { %>
           <div class="folder_icon" style="font-size: 100px">

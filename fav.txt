@@ -1,0 +1,3 @@
+/data/supasorn/dwui/stable-diffusion-webui/log/images
+/data/supasorn/diffusion_me/images
+/data/supasorn/mylora/diffusers/

@@ -130,6 +130,12 @@ ul {
   padding: 5px;
   display: inline-block;
 }
+.infotab {
+  display: inline-block;
+  padding: 5px;
+  position: absolute;
+  right: 130px;
+}
 .finder_zoombar {
   display: inline-block;
   float: right;
@@ -229,6 +235,7 @@ a:hover {
 }
 #app_finder {
   right: 0px;
+  top: 0px;
   padding: 10px;
   position: absolute;
   font-size: 40px;
@@ -275,6 +282,14 @@ a:hover {
 
 </head>
 <body>
+  <div class="fav_list">
+    <ul>
+      <% for (let i = 0; i < favs.length; i++) { %>
+        <li><a href="<%= favs[i] %>" class="fav_link"><%= favs[i] %></a></li>
+      <% } %>
+    </ul>
+  </div>
+
   <div id="app_finder">
     <i class="fa-regular fa-folder-open" id="app_finder_open"></i>
   </div>

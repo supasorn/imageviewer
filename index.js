@@ -10,7 +10,7 @@ const os = require('os');
 const bodyParser = require('body-parser');
 
 
-let root='/home/supasorn/neodpm/';
+let root = '/';
 // let root='/data/pakkapon/eg3d-main/eg3d/';
 if (process.argv.length > 2) {
   root = process.argv[2];
@@ -22,7 +22,8 @@ var resq = [];
 console.log("set root=", root);
 // open livereload high port and start to watch public directory for changes
 const liveReloadServer = livereload.createServer();
-liveReloadServer.watch([root, os.homedir()]);
+// liveReloadServer.watch([root, os.homedir()]);
+liveReloadServer.watch(["/data/supasorn", "/home2/supasorn", "/data2/supasorn", os.homedir()]);
 // ping browser on Express boot, once browser has reconnected and handshaken
 liveReloadServer.server.once("connection", () => {
   setTimeout(() => {
@@ -57,7 +58,7 @@ app.use('/live/', (req, res) => {
     out += `<video loop src='${req.path}' autoplay muted></video>`;
   else
     out += `<img src='${req.path}'>`;
-  out += getLRScript(); 
+  out += getLRScript();
   res.send(out);
 });
 
@@ -67,12 +68,12 @@ function printFileList(urlpath, lst) {
   for (const i of lst) {
     let cls = "a_file";
     let pre = "";
-    if (i[i.length-1] == '/') {
+    if (i[i.length - 1] == '/') {
       cls = "a_dir";
-      pre = "/browse"; 
+      pre = "/browse";
     } else if (path.extname(i) == ".mp4") {
       cls = "a_video";
-    } else if (path.extname(i) == ".jpg" || path.extname(i) == ".png") {
+    } else if (path.extname(i) == ".jpg" || path.extname(i) == ".png" || path.extname(i) == ".JPG") {
       cls = "a_img";
     }
     out += `<a class='${cls}' href='${pre}/${i.replace(root, "")}'>${path.basename(i)}</a><br>`;
@@ -81,41 +82,54 @@ function printFileList(urlpath, lst) {
 }
 
 function sortByModifiedTime(files) {
-  return files.map(function (fileName) {
+  return files.map(function(fileName) {
     return {
       name: fileName,
       time: fs.statSync(fileName).mtime.getTime()
     };
   })
-  .sort(function (a, b) {
-    return b.time - a.time; })
-  .map(function (v) {
-    return v.name; });
+    .sort(function(a, b) {
+      return b.time - a.time;
+    })
+    .map(function(v) {
+      return v.name;
+    });
 }
-app.use('/subscribe', async(req, res) => {
+app.use('/subscribe', async (req, res) => {
   resq.push(res);
   console.log("newsubscribe");
   // console.log(resq);
 });
 
-app.use('/screen', async(req, res) => {
-  res.render('screen', {});
+app.use('/screen', async (req, res) => {
+  const path = 'fav.txt';
+  if (fs.existsSync(path)) {
+    let rawdata = fs.readFileSync(path);
+    favs = rawdata.toString().split("\n");
+    // remove empty lines
+    favs = favs.filter(x => x != "");
+  }
+
+  res.render('screen',
+    {
+      favs: favs
+    });
 });
 
-app.use('/load_windows', async(req, res) => {
+app.use('/load_windows', async (req, res) => {
   const path = 'screen.json_dat';
   let json = null;
   if (fs.existsSync(path)) {
     let rawdata = fs.readFileSync(path);
     json = JSON.parse(rawdata);
-    console.log(json);
+    console.log("/load_windows" + JSON.stringify(json));
+
     res.send(json);
     res.end();
   }
-
 });
 
-app.use('/finder/', async(req, res) => {
+app.use('/finder/', async (req, res) => {
   let urlpath = req.path;
   if (urlpath[urlpath.length - 1] != '/')
     urlpath = urlpath + '/';
@@ -125,25 +139,31 @@ app.use('/finder/', async(req, res) => {
 
   const sdir = await globp(`${root}/${urlpath}/*/`);
 
-  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,mp4}`, {nodir: true});
+  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,JPG,mp4}`, { nodir: true });
   smedia = sortByModifiedTime(smedia);
 
-  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.mp4)`, {nodir: true});
+  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.JPG|*.mp4)`, { nodir: true });
   const s = sdir.concat(smedia, sfile);
   // let rawimglist = smedia.map(x => ({fullpath: x.replace(root, ""), basename: path.basename(x)}));
-  let rawimglist = s.map(x => ({fullpath: x.replace(root, ""), basename: path.basename(x)}));
+  let rawimglist = s.map(x => ({ fullpath: x.replace(root, ""), basename: path.basename(x) }));
 
-  res.render('finder', 
-    {list: s.map (x => x.replace(path.join(root, urlpath), "")),
-     path: urlpath.split("/"),
-     rawimglist
+  const num_folders = sdir.length;
+  const num_images = smedia.length;
+  const num_files = sfile.length;
+
+  res.render('finder',
+    {
+      list: s.map(x => x.replace(path.join(root, urlpath), "")),
+      path: urlpath.split("/"),
+      rawimglist,
+      info: `${num_images} imgs`,
     }, (err, html) => {
-    res.status(200).send({html, "path": urlpath});
-  });
+      res.status(200).send({ html, "path": urlpath });
+    });
 });
 
 // unused
-app.use('/directory/', async(req, res) => { 
+app.use('/directory/', async (req, res) => {
   let urlpath = req.path;
   if (urlpath[urlpath.length - 1] != '/')
     urlpath = urlpath + '/';
@@ -153,29 +173,36 @@ app.use('/directory/', async(req, res) => {
 
   const sdir = await globp(`${root}/${urlpath}/*/`);
 
-  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,mp4}`, {nodir: true});
+  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,JPG,mp4}`, { nodir: true });
   smedia = sortByModifiedTime(smedia);
 
-  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.mp4)`, {nodir: true});
+  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.JPG|*.mp4)`, { nodir: true });
   const s = sdir.concat(smedia, sfile);
 
   // res.send({"path": urlpath, "data": s.map(x => path.basename(x)) });
-  res.send({"path": urlpath, "ls": s.map (x => x.replace(path.join(root, urlpath), "")) });
+  res.send({ "path": urlpath, "ls": s.map(x => x.replace(path.join(root, urlpath), "")) });
   res.end();
 
 });
-app.post('/save_window', async(req, res) => {
+app.post('/save_window', async (req, res) => {
   // console.log("data");
   // console.log(req.body);
-  const path = 'screen.json_dat';
+  const file = 'screen.json_dat';
   console.log("/save_window");
-  // console.log("/save_window" + JSON.stringify(req.body));
-  // const jsonString = JSON.stringify(json);
-  fs.writeFileSync(path, JSON.stringify(req.body));
+
+  // loop over path in each window, and prepend root
+  // req.body.forEach(item => {
+  // if (item.path) {
+  // item.path = path.join(__dirname, root, item.path);
+  // }
+  // });
+  console.log(req.body);
+
+  fs.writeFileSync(file, JSON.stringify(req.body));
   res.send(req.body);
   res.end();
 });
-app.use('/add_window', async(req, res) => {
+app.use('/add_window', async (req, res) => {
   console.log("/add_window" + req.query.path);
   resq.forEach((rs) => {
     const rand = Math.random().toString(16).substr(2, 8);
@@ -191,33 +218,46 @@ app.use('/add_window', async(req, res) => {
   // const path = 'window.json';
   // let json = null;
   // if (fs.existsSync(path)) {
-    // console.log("in");
-    // let rawdata = fs.readFileSync(path);
-    // json = JSON.parse(rawdata);
-    // console.log("json", json);
-    // json = [{"id": 1}, {"id": 2}]
+  // console.log("in");
+  // let rawdata = fs.readFileSync(path);
+  // json = JSON.parse(rawdata);
+  // console.log("json", json);
+  // json = [{"id": 1}, {"id": 2}]
   // }
   // const jsonString = JSON.stringify(json);
   // fs.writeFileSync(path, jsonString)
 });
 
+app.use('/rm', async (req, res) => {
+  console.log("/rm " + req.query.path);
+  // delete the file given by req.query.path;
+  let p = path.join(root, req.query.path);
 
-app.use('/browse', async(req, res) => {
+  // only allows deleting images
+  if (path.extname(p) == ".jpg" || path.extname(p) == ".png" || path.extname(p) == ".JPG") {
+    fs.unlinkSync(p);
+  }
+  res.send("done");
+  res.end();
+});
+
+
+app.use('/browse', async (req, res) => {
   const fl = req.query.fl;
   const urlpath = req.path;
   console.log("path", urlpath);
   const sdir = await globp(`${root}/${urlpath}/*/`);
 
-  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,mp4}`, {nodir: true});
+  let smedia = await globp(`${root}/${urlpath}/*.{png,jpg,JPG,mp4}`, { nodir: true });
   smedia = sortByModifiedTime(smedia);
 
-  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.mp4)`, {nodir: true});
+  const sfile = await globp(`${root}/${urlpath}/!(*.png|*.jpg|*.JPG|*.mp4)`, { nodir: true });
   const s = sdir.concat(smedia, sfile);
   const filelist = printFileList(urlpath, s);
 
-  rawimglist = smedia.map(x => ({fullpath: x.replace(root, ""), basename: path.basename(x)}));
+  rawimglist = smedia.map(x => ({ fullpath: x.replace(root, ""), basename: path.basename(x) }));
   //rawimglist = smedia.map(x => path.basename(x));
-  res.render('index', {content: filelist, rawimglist});
+  res.render('index', { content: filelist, rawimglist });
 });
 
 
