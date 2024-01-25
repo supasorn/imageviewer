@@ -235,7 +235,8 @@ app.use('/rm', async (req, res) => {
 
   // only allows deleting images
   if (path.extname(p) == ".jpg" || path.extname(p) == ".png" || path.extname(p) == ".JPG") {
-    fs.unlinkSync(p);
+    if (fs.existsSync(p))
+      fs.unlinkSync(p);
   }
   res.send("done");
   res.end();
