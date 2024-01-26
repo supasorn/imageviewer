@@ -242,6 +242,17 @@ app.use('/rm', async (req, res) => {
   res.end();
 });
 
+app.use('/get_media_list', async (req, res) => {
+  console.log("/get_media_list " + req.query.path);
+  // p is the parent directory of the image
+  let p = path.dirname(path.join(root, req.query.path));
+  let smedia = await globp(`${p}/*.{png,jpg,JPG,mp4}`, { nodir: true });
+  smedia = sortByModifiedTime(smedia);
+  smedia = smedia.map(x => x.replace(root, ""));
+  res.send(smedia);
+  res.end();
+});
+
 
 app.use('/browse', async (req, res) => {
   const fl = req.query.fl;

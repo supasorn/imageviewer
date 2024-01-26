@@ -10,26 +10,28 @@ var lastmx, lastmy;
 var awin; // active window
 var action;
 
+var media_list = {};
+
 function saveWindows() {
   let data = [];
   // for (i in windows) {
-    // const w = windows[i];
-    // data.push({
-      // "x": w.x, "y": w.y, 
-      // "w": w.width, 
-      // "h": w.height,
-      // "title": w.title,
-      // "min": w.min,
-      // "max": w.max
-    // });
+  // const w = windows[i];
+  // data.push({
+  // "x": w.x, "y": w.y, 
+  // "w": w.width, 
+  // "h": w.height,
+  // "title": w.title,
+  // "min": w.min,
+  // "max": w.max
+  // });
   // }
-  $(".mywindow").each(function(k ,v) {
+  $(".mywindow").each(function(k, v) {
     if ($(v).attr('id') != "template") {
       o = {
-        "x": $(v).css("left"), 
-        "y": $(v).css("top"), 
+        "x": $(v).css("left"),
+        "y": $(v).css("top"),
         "z-index": $(v).css("z-index"),
-        "w": $(v).css("width"), 
+        "w": $(v).css("width"),
         "h": $(v).css("height"),
         "path": $(v).data("path"),
         "min": $(v).data("state") == "min",
@@ -57,13 +59,13 @@ function saveWindows() {
 }
 function saveWindowTimer() {
   clearTimeout(timer);
-  timer = setTimeout(function(){ 
+  timer = setTimeout(function() {
     saveWindows();
   }, 100);
 }
 
 function findEmptyXY() {
-  for (let i = 50; 1; i+=30) {
+  for (let i = 50; 1; i += 30) {
     let conflict = 0;
     $(".mywindow").each(function() {
       if (Math.abs($(this).offset().left - i) < 30 && Math.abs($(this).offset().top - i) < 30) {
@@ -87,7 +89,7 @@ function topZIndex() {
 }
 
 function updateZoom(zoomball, newx) {
-  newx = parseInt(newx); 
+  newx = parseInt(newx);
   console.log("updateZoom()", zoomball, newx);
   const TICKS = 105;
   if (newx < 0) newx = 0;
@@ -95,7 +97,7 @@ function updateZoom(zoomball, newx) {
   zoomball.css("left", newx + "px");
 
   const t = newx / TICKS;
-  const ns = 32 * (1-t) + 512 * t;
+  const ns = 32 * (1 - t) + 512 * t;
 
   let mwin = zoomball.closest(".mywindow");
   let objs = mwin.find(".flex-container img, .flex-container video");
@@ -121,7 +123,7 @@ function colorizePath(path) {
   // console.log();
   return "<span class='unfocused'>" + s.slice(0, -1).join("/") + "/</span>" + s.at(-1);
 }
-function createWindow(opts) {
+function createWindow(opts, kill_previous=0) {
   console.log("Create Window", opts["path"]);
   let nwin = $("#template").clone().removeAttr('id');
   $("#template").after(nwin);
@@ -143,11 +145,11 @@ function createWindow(opts) {
     opts["type"] = "video"
     nwin.data("type", "video");
     nwin.data("fixed_aspect", true);
-  } 
+  }
 
   if (opts["x"] === undefined || opts["y"] == undefined) {
     [opts["x"], opts["y"]] = findEmptyXY();
-  } 
+  }
   nwin.css("left", opts["x"]);
   nwin.css("top", opts["y"]);
 
@@ -157,7 +159,11 @@ function createWindow(opts) {
     nwin.show();
     if (opts["min"]) {
       nwin.find(".button_min").click();
-    } 
+    }
+    if (kill_previous) {
+      kill_previous.remove();
+    }
+    saveWindows();
   }
 
   if (opts["type"] == "image") {
@@ -172,7 +178,7 @@ function createWindow(opts) {
       if (!nwin.data("loaded")) {
         if (opts["w"] === undefined) {
           let w = nwin.data("nw");
-          if (nwin.data("nw") > 800) 
+          if (nwin.data("nw") > 800)
             w = 800;
           nwin.css("width", w + "px");
         } else
@@ -180,14 +186,14 @@ function createWindow(opts) {
 
         if (opts["h"] === undefined) {
           let h = nwin.data("nh");
-          if (nwin.data("nw") > 800) 
+          if (nwin.data("nw") > 800)
             h = nwin.data("nh") * 800 / nwin.data("nw");
           nwin.css("height", (h + 20) + "px");
         } else
           nwin.css("height", opts["h"]);
       }
-//         nwin.css("width", (opts["w"] || (nwin.data("nw") + "px");
-//         nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
+      //         nwin.css("width", (opts["w"] || (nwin.data("nw") + "px");
+      //         nwin.css("height", (opts["h"] || nwin.data("nh")) + 20 + "px");
       nwin.data("loaded", true);
       finishedLoading(nwin);
     }
@@ -223,7 +229,7 @@ function createWindow(opts) {
     }
     nwin.find(".content").append(video);
   } else if (opts["type"] == "finder") {
-    function updateFinder(path, save_windows=false) {
+    function updateFinder(path, save_windows = false) {
       const slide_value = nwin.find(".finder_left").css("flex-basis") || opts["slide"];
       const zoom_value = nwin.find(".zoom_ball").css("left") || opts["zoom"];
       console.log("fetch " + path + ", " + slide_value + ", " + zoom_value);
@@ -245,14 +251,14 @@ function createWindow(opts) {
             console.log(nwin.data("path"));
             updateFinder(nwin.data("path") + $(this).text(), true);
           } else {
-            $.get("/add_window", {"path": data["path"].slice(1) + $(this).text()});
+            $.get("/add_window", { "path": data["path"].slice(1) + $(this).text() });
           }
           e.preventDefault();
         });
         nwin.find(".aopen").click(function(e) {
           // check if cmd key is pressed
           if (e.metaKey) {
-            $.get("/rm", {"path": $(this).attr("href")});
+            $.get("/rm", { "path": $(this).attr("href") });
             e.preventDefault();
             return;
           }
@@ -312,15 +318,30 @@ function createWindow(opts) {
     nwin.css("z-index", topZIndex() + 1);
   else
     nwin.css("z-index", opts["z-index"]);
+
+  // if image or video
+  if (opts["type"] == "image" || opts["type"] == "video") {
+    $.get("/get_media_list", { "path": opts["path"]}, function(data, status) {
+      // add to media list where the index is the parent folder of the items
+      if (data.length == 0) return;
+      let parentDir = getParentDir(data[0]);
+      media_list[parentDir] = data;
+    });
+
+  }
+}
+
+function getParentDir(path) {
+  return path.substring(0, path.lastIndexOf('/'));
 }
 
 function createWindowFromImage(imagepath) {
-  createWindow({"path": imagepath, "fixed_aspect": true});
+  createWindow({ "path": imagepath, "fixed_aspect": true });
 }
 
 
 async function subscribe() {
-  let response = await fetch("/subscribe?rand="+Math.random());
+  let response = await fetch("/subscribe?rand=" + Math.random());
 
   if (response.status == 502) { // connection timeout
     await subscribe();
@@ -342,28 +363,28 @@ async function subscribe() {
 }
 
 function IsOnBorder(e, element) {
-  var offset = $(element).offset(); 
+  var offset = $(element).offset();
   var relX = e.pageX - offset.left;
-  var relY = e.pageY - offset.top; 
+  var relY = e.pageY - offset.top;
 
   const SIZE = 10;
   let px = "", py = "";
-  if (relX < SIZE && !$(element).data("fixed_aspect")) 
+  if (relX < SIZE && !$(element).data("fixed_aspect"))
     px = "w";
-  else if (relX > $(element).width() - SIZE) 
+  else if (relX > $(element).width() - SIZE)
     px = "e";
 
-  if (relY < SIZE && !$(element).data("fixed_aspect") && false)  
+  if (relY < SIZE && !$(element).data("fixed_aspect") && false)
     py = "n";
-  else if (relY > $(element).height() - SIZE) 
+  else if (relY > $(element).height() - SIZE)
     py = "s";
   return [px, py, relX, relY];
 }
 
 function findEmptyXYMin() {
   const ww = $(window).width();
-  for (let y = 20; 1; y+= 25) {
-    for (let x = 0; x < ww; x+=200) {
+  for (let y = 20; 1; y += 25) {
+    for (let x = 0; x < ww; x += 200) {
       let conflict = 0;
       $(".window_min").each(function() {
         if (Math.abs($(this).css("left") - x) < 5 && Math.abs(parseInt($(this).css("bottom")) - y) < 5) {
@@ -379,7 +400,7 @@ function findEmptyXYMin() {
 }
 function createMinWindow(win) {
   // if (win.css("visibility") == "hidden")
-    // return;
+  // return;
   win.data("state", "min");
   let nwin = $("#template_min").clone().removeAttr('id');
   nwin.find(".title").html(win.find(".title").html());
@@ -407,7 +428,7 @@ function createMinWindow(win) {
 }
 function createMaxWindow(win) {
   // if (win.css("visibility") == "hidden")
-    // return;
+  // return;
   win.data("state", "max");
   let nwin = $("#template_max").clone().removeAttr('id');
   nwin.find(".title").html(win.find(".title").html());
@@ -418,14 +439,14 @@ function createMaxWindow(win) {
   win.css("visibility", "hidden");
 
   // nwin.click(function() {
-    // nwin.remove();
-    // win.css("visibility", "visible");
-    // saveWindows();
+  // nwin.remove();
+  // win.css("visibility", "visible");
+  // saveWindows();
   // });
   // nwin.find(".button_close").click(function() {
-    // nwin.remove();
-    // win.remove();
-    // saveWindows();
+  // nwin.remove();
+  // win.remove();
+  // saveWindows();
   // });
   // saveWindows();
 }
@@ -511,7 +532,7 @@ function snapwh(self, w, h) {
 }
 
 function refresh() {
-  $(".mywindow").mousedown(function(e) {
+  $(".mywindow").off('mousedown').mousedown(function(e) {
     [lpx, lpy, relX, relY] = IsOnBorder(e, this);
     const of = $(this).offset();
     lastx = of.left;
@@ -529,13 +550,68 @@ function refresh() {
       action = "resize";
     }
   });
-  $(".mywindow").mouseup(function(e) {
+  $(".mywindow").off('mouseup').mouseup(function(e) {
     action = 0;
   });
-  $(document).mouseup(function(e) {
+  $(document).off('mouseup').mouseup(function(e) {
     action = 0;
   });
-  $(".mywindow .button_max").click(function() {
+  // catch if the user presses an arrow key
+  $(document).off('keydown').keydown(function(e) {
+    // find .mywindow with highest z-index
+    let awin = null;
+    let mx = 0;
+    $(".mywindow").each(function() {
+      if (parseInt($(this).css("z-index")) > mx) {
+        mx = parseInt($(this).css("z-index"));
+        awin = $(this);
+      }
+    });
+    // check that the window's type is image or video
+    if (awin == null || (awin.data("type") != "image" && awin.data("type") != "video")) return;
+
+    console.log(e.keyCode);
+    let img = awin.find(".imgcontent");
+
+
+    let dir = 0;
+    if (e.keyCode == 37) { // left
+      dir = -1;
+    } else if (e.keyCode == 39) { // right
+      dir = 1;
+    }
+    if (dir != 0) {
+      let parentDir = getParentDir(awin.data("path"));
+      // check if the path exist in the media list
+      console.log("parentDir", parentDir);
+      if (media_list[parentDir] !== undefined) {
+        let index = media_list[parentDir].indexOf(awin.data("path"));
+        if (index >= 0) {
+          console.log("index", index);
+          const n = media_list[parentDir].length;
+          let newindex = (index + dir + n) % n;
+          let new_path = media_list[parentDir][newindex];
+          console.log("new_path", new_path);
+
+          // change transparency of img to 50%
+          img.css("opacity", "0.5");
+          // get x y from awin
+          createWindow({
+            "path": new_path,
+            "x": awin.css("left"),
+            "y": awin.css("top"),
+            "w": awin.css("width"),
+            "h": awin.css("height"),
+            "fixed_aspect": true,
+          }, awin);
+          refresh();
+        }
+      }
+      e.preventDefault();
+    }
+  });
+
+  $(".mywindow .button_max").off('click').click(function() {
     alert("from win");
   });
 
@@ -579,13 +655,13 @@ function refresh() {
       window.open("/live/" + win.data("path"));
     }
   });
-  $(".button_close").click(function() {
+  $(".button_close").off('click').click(function() {
     $(this).closest(".mywindow").remove();
     saveWindows();
   });
-  $(".mywindow").mousemove(function(e) {
+  $(".mywindow").off('mousemove').mousemove(function(e) {
     const [px, py, relX, relY] = IsOnBorder(e, this);
-    if (px == "" && py == "") { 
+    if (px == "" && py == "") {
       if ($(this).data("type") == "finder") {
         if (relY < 20)
           $(this).css("cursor", "move");
@@ -594,9 +670,9 @@ function refresh() {
       } else {
         $(this).css("cursor", "move");
       }
-    } else if (px != "" && py =="")
+    } else if (px != "" && py == "")
       $(this).css("cursor", "ew-resize");
-    else if (px == "" && py != "") 
+    else if (px == "" && py != "")
       $(this).css("cursor", "ns-resize");
     else if ((px == "e" && py == "n") || (px == "w" && py == "s"))
       $(this).css("cursor", "nesw-resize");
@@ -611,16 +687,16 @@ function refresh() {
       [nx, ny] = snap(awin, nx, ny);
       // console.log(nx, ny);
       // if (awin.data("fixed_aspect")) {
-        // nx = Math.round(nx / 20) * 20;
-        // ny = Math.round(ny / 20) * 20;
+      // nx = Math.round(nx / 20) * 20;
+      // ny = Math.round(ny / 20) * 20;
       // }
       awin.css({
         "left": nx,
-        "top": ny 
+        "top": ny
       });
     } else if (action == "resize") {
       // console.log("action2");
-      
+
 
       const MINW = 100;
       const MINH = 40;
@@ -656,7 +732,7 @@ function refresh() {
       let neww = parseInt(lastx + (e.pageX - lastmx));
       let mw = awin.closest(".mywindow").width();
       if (neww > mw - 10)
-        neww = mw - 10; 
+        neww = mw - 10;
       if (neww < 0)
         neww = 0;
       awin.prev().css("flex-basis", neww + "px");
@@ -684,13 +760,13 @@ $(function() {
     }
   });
   $("#app_finder_open").click(function() {
-    createWindow({"path": "/"});
+    createWindow({ "path": "/" });
     refresh();
   });
 
   subscribe();
   $(".fav_link").click(function(e) {
-    createWindow({"path": $(this).attr("href")});
+    createWindow({ "path": $(this).attr("href") });
     refresh();
     e.preventDefault();
   });
