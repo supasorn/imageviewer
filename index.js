@@ -228,6 +228,34 @@ app.use('/add_window', async (req, res) => {
   // fs.writeFileSync(path, jsonString)
 });
 
+app.use('/send_to_mbp', async (req, res) => {
+  console.log("/send_to_mbp" + req.query.path);
+
+  let p = path.join(root, req.query.path);
+  // run system command
+  cmd = `scp ${p} $(if [ -s ~/ssh_client_info.txt ]; then cat ~/ssh_client_info.txt | awk '\{ print $1 \}'; else echo $SSH_CLIENT | awk '\{ print $1 \}'; fi):/Users/supasorn/Downloads`;
+
+  // issue system command "cmd"
+  const { exec } = require("child_process");
+  exec(cmd, (error, stdout, stderr) => {
+    if (error) {
+      console.log(`error: ${error.message}`);
+      res.send("error");
+      res.end();
+      return;
+    }
+    if (stderr) {
+      console.log(`stderr: ${stderr}`);
+      res.send("error");
+      res.end();
+      return;
+    }
+    console.log(`stdout: ${stdout}`);
+  });
+  res.send("done");
+  res.end();
+});
+
 app.use('/rm', async (req, res) => {
   console.log("/rm " + req.query.path);
   // delete the file given by req.query.path;

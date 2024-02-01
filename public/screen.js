@@ -257,8 +257,14 @@ function createWindow(opts, kill_previous=0) {
         });
         nwin.find(".aopen").click(function(e) {
           // check if cmd key is pressed
-          if (e.metaKey) {
+          // check if shift key is pressed
+          if (e.shiftKey) {
             $.get("/rm", { "path": $(this).attr("href") });
+            e.preventDefault();
+            return;
+          }
+          if (e.altKey) {
+            $.get("/send_to_mbp", { "path": $(this).attr("href") });
             e.preventDefault();
             return;
           }
@@ -579,7 +585,12 @@ function refresh() {
       dir = -1;
     } else if (e.keyCode == 39) { // right
       dir = 1;
+    } else if (e.shiftKey && e.keyCode == 68) { // if press shift+d
+      console.log("delete");
+      $.get("/rm", { "path": img.attr("src") });
+      dir = 1;
     }
+
     if (dir != 0) {
       let parentDir = getParentDir(awin.data("path"));
       // check if the path exist in the media list
