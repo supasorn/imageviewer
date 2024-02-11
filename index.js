@@ -232,8 +232,11 @@ app.use('/send_to_mbp', async (req, res) => {
   console.log("/send_to_mbp" + req.query.path);
 
   let p = path.join(root, req.query.path);
+  // get filename
+  let savepath = path.basename(p).replace(/\./g, `_${Math.floor(Math.random() * 1000000)}.`);
+
   // run system command
-  cmd = `scp ${p} $(if [ -s ~/ssh_client_info.txt ]; then cat ~/ssh_client_info.txt | awk '\{ print $1 \}'; else echo $SSH_CLIENT | awk '\{ print $1 \}'; fi):/Users/supasorn/Downloads`;
+  cmd = `scp ${p} $(if [ -s ~/ssh_client_info.txt ]; then cat ~/ssh_client_info.txt | awk '\{ print $1 \}'; else echo $SSH_CLIENT | awk '\{ print $1 \}'; fi):/Users/supasorn/Downloads/${savepath}`;
 
   // issue system command "cmd"
   const { exec } = require("child_process");

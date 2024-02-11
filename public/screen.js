@@ -197,7 +197,7 @@ function createWindow(opts, kill_previous=0) {
       nwin.data("loaded", true);
       finishedLoading(nwin);
     }
-    image.src = "/" + opts["path"];
+    image.src = "/" + opts["path"] + "?" + Math.random();
     nwin.find(".content").append(image);
   } else if (opts["type"] == "video") {
     var video = document.createElement("video");
