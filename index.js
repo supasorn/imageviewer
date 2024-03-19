@@ -8,6 +8,7 @@ const fs = require('fs');
 const os = require('os');
 // const imagesize = require('image-size');
 const bodyParser = require('body-parser');
+const basicAuth = require('express-basic-auth');
 
 
 let root = '/';
@@ -41,6 +42,10 @@ app.set('view engine', 'ejs');
 app.use(express.static(root));
 app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/imshow', express.static(path.join(os.homedir(), 'tmp_imshow')))
+app.use(basicAuth({
+    users: { 'sup': '11111' }, 
+    challenge: true, 
+}));
 
 function getLRScript() {
   return `<script>
@@ -235,8 +240,9 @@ app.use('/send_to_mbp', async (req, res) => {
   // get filename
   let savepath = path.basename(p).replace(/\./g, `_${Math.floor(Math.random() * 1000000)}.`);
 
+  const clientIp = req.connection.remoteAddress.replace(/^.*:/, '');
   // run system command
-  cmd = `scp ${p} $(if [ -s ~/ssh_client_info.txt ]; then cat ~/ssh_client_info.txt | awk '\{ print $1 \}'; else echo $SSH_CLIENT | awk '\{ print $1 \}'; fi):/Users/supasorn/Downloads/${savepath}`;
+  cmd = `scp ${p} ${clientIp}:/Users/supasorn/Downloads/${savepath}`;
 
   // issue system command "cmd"
   const { exec } = require("child_process");
@@ -244,19 +250,15 @@ app.use('/send_to_mbp', async (req, res) => {
     if (error) {
       console.log(`error: ${error.message}`);
       res.send("error");
-      res.end();
-      return;
-    }
-    if (stderr) {
+    } else if (stderr) {
       console.log(`stderr: ${stderr}`);
       res.send("error");
-      res.end();
-      return;
+    } else {
+      console.log(`stdout: ${stdout}`);
+      res.send("done"); 
     }
-    console.log(`stdout: ${stdout}`);
+    res.end();
   });
-  res.send("done");
-  res.end();
 });
 
 app.use('/rm', async (req, res) => {
