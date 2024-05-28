@@ -24,7 +24,8 @@ console.log("set root=", root);
 // open livereload high port and start to watch public directory for changes
 const liveReloadServer = livereload.createServer();
 // liveReloadServer.watch([root, os.homedir()]);
-liveReloadServer.watch(["/data/supasorn", "/home2/supasorn", "/data2/supasorn", os.homedir()]);
+liveReloadServer.watch([root]);
+// liveReloadServer.watch(["/data/supasorn", "/home2/supasorn", "/data2/supasorn", os.homedir()]);
 // ping browser on Express boot, once browser has reconnected and handshaken
 liveReloadServer.server.once("connection", () => {
   setTimeout(() => {
